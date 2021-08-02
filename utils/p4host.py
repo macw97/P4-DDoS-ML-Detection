@@ -22,9 +22,3 @@ class P4Host(Host):
             self.defaultIntf().IP(),
             self.defaultIntf().MAC()
         ))
-
-
-
-
-
-
