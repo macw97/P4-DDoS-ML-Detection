@@ -2,7 +2,9 @@ from mininet.node import Switch
 from mininet.moduledeps import pathCheck
 from mininet.log import setLogLevel, info, error, debug
 import os
+import tempfile
 from netstat import check_listening_on_port
+from time import sleep
 
 class P4Switch(Switch):
     device_id = 0
@@ -45,3 +47,57 @@ class P4Switch(Switch):
             P4Switch.device_id = max(P4Switch.device_id,device_id)
         
         self.nanomsg = "ipc:///tmp/bm-{}-log.ipc".format(self.device_id)
+
+    
+    def check_switch_started(self,pid):
+
+        while True:
+            if not os.path.exists(os.path.join("/proc",str(pid))):
+                return False
+            if check_listening_on_port(self.thrift_port):
+                return True
+            sleep(1)
+    
+    def start(self,controllers):
+        info("Start of P4 switch {}.\n".format(self.name))
+        args = [self.sw_path]
+        for port, intf in self.intfs.items():
+            if not intf.IP():
+                args.extend(['-i',str(port)+"@"+intf.name])
+            
+        if self.pcap:
+            args.append("--pcap {}".format(self.pcap))
+        if self.thrift_port:
+            args.extend(['--thrift-port', str(self.thrift_port)])
+        if self.nanomsg:
+            args.extend(['--nanolog',self.nanomsg])
+
+        args.extend(['--device-id', str(self.device_id)])
+        P4Switch.device_id+=1
+        args.append(self.json_path)
+        info(' '.join(args) + "\n")
+
+        pid = None
+        with tempfile.NamedTemporaryFile() as f:
+            # self.cmd(' '.join(args) + ' > /dev/null 2>&1 &')
+            self.cmd(' '.join(args) + ' >' + self.log_file + ' 2>&1 & echo $! >> ' + f.name)
+            pid = int(f.read())
+        debug("P4 switch {} PID is {}.\n".format(self.name,pid))
+        if not self.check_switch_started(pid):
+            error("P4 switch {} did not start correctly.\n".format(self.name))
+            exit(1)
+        info("P4 switch {} has been started.\n".format(self.name))
+    
+    def stop(self):
+        self.output.flush()
+        self.cmd("kill {}".format(self.sw_path))
+        self.cmd('wait')
+        self.deleteIntfs()
+
+    def attach(self,intf):
+        info("Connect data port")
+        assert(0)
+    def detach(self,intf):
+        info("Disconnect data port")
+        assert(0)
+        
