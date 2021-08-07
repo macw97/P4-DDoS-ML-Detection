@@ -7,7 +7,6 @@ LOG_DIR = logs
 
 P4C = p4c-bm2-ss
 P4C_ARGS += --p4runtime-files $(BUILD_DIR)/$(basename $@).p4.p4info.txt
-
 RUN_SCRIPT = utils/run.py
 
 source = $(wildcard *.p4)
@@ -24,7 +23,7 @@ endif
 all: run
 
 run: build
-	sudo python $(RUN_SCRIPT) -t $(TOPO) $(run_args)
+	sudo python3 $(RUN_SCRIPT) -t $(TOPO) $(run_args)
 
 stop:
 	sudo mn -c
@@ -35,7 +34,7 @@ build: createDirs $(compiled_json)
 	$(P4C) --p4v 16 $(P4C_ARGS) -o $(BUILD_DIR)/$@ $<
 
 createDirs:
-	mkdir -v $(BUILD_DIR) $(PCAP_DIR) $(LOG_DIR)
+	mkdir -p $(BUILD_DIR) $(PCAP_DIR) $(LOG_DIR)
 
 clean: stop
 	rm -f *.pcap
