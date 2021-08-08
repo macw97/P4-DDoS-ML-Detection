@@ -28,7 +28,7 @@ from mininet.link import TCLink
 from mininet.cli import CLI
 
 from p4runtime_switch import P4RuntimeSwitch
-import p4runtime_lib.simple_controller
+import p4runtime_lib
 
 def configureP4Switch(**switch_args):
     """ Helper class that is called by mininet to initialize
@@ -139,7 +139,7 @@ class ExerciseRunner:
 
     def format_latency(self, l):
         """ Helper method for parsing link latencies from the topology json. """
-        if isinstance(l, (str, unicode)):
+        if isinstance(l, str):
             return l
         else:
             return str(l) + "ms"
@@ -262,6 +262,7 @@ class ExerciseRunner:
         grpc_port = sw_obj.grpc_port
         device_id = sw_obj.device_id
         runtime_json = sw_dict['runtime_json']
+        self.logger("File - {}".format(runtime_json))
         self.logger("Configuring switch {} using P4Runtime with file {}".format(sw_name, runtime_json))
         with open(runtime_json, 'r') as sw_conf_file:
             outfile = "{}/{}-p4runtime-requests.txt".format(self.log_dir, sw_name)
@@ -296,7 +297,7 @@ class ExerciseRunner:
         P4Runtime, depending if any command or runtime JSON files were
         provided for the switches.
         """
-        for sw_name, sw_dict in self.switches.iteritems():
+        for sw_name, sw_dict in self.switches.items():
             if 'cli_input' in sw_dict:
                 self.program_switch_cli(sw_name, sw_dict)
             if 'runtime_json' in sw_dict:
