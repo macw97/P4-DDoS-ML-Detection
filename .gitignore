@@ -1,11 +1,6 @@
-# main.bmv2 contains already compiled json and p4i file for topology
-
-./main.bmv2/*
-main.bmv2/*
-./build/*
-build/*
-./utils/__pycache__/*
-utils/__pycache__/*
-logs/*
-pcaps/*
+main.bmv2/
+build/
+__pycache__/
+logs/
+pcaps/
 

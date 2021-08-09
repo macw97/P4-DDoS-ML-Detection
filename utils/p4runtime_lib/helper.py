@@ -18,7 +18,7 @@ import google.protobuf.text_format
 from p4.v1 import p4runtime_pb2
 from p4.config.v1 import p4info_pb2
 
-from convert import encode
+from .convert import encode
 
 class P4InfoHelper(object):
     def __init__(self, p4_info_filepath):

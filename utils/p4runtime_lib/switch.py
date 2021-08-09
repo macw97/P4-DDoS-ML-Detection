@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import queue
+from queue import Queue
 from abc import abstractmethod
 from datetime import datetime
 
@@ -174,7 +174,7 @@ class GrpcRequestLogger(grpc.UnaryUnaryClientInterceptor,
         self.log_message(client_call_details.method, request)
         return continuation(client_call_details, request)
 
-class IterableQueue(queue):
+class IterableQueue(Queue):
     _sentinel = object()
 
     def __iter__(self):

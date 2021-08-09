@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from switch import SwitchConnection
+from .switch import SwitchConnection
 from p4.tmp import p4config_pb2
 
 

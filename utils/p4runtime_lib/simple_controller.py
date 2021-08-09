@@ -18,14 +18,14 @@ import argparse
 import json
 import os
 import sys
-import bmv2
-import helper
+from . import bmv2
+from . import helper
 
 def error(msg):
-    print >> sys.stderr, ' - ERROR! ' + msg
+    print("{} - ERROR! {}".format(sys.stderr,msg))
 
 def info(msg):
-    print >> sys.stdout, ' - ' + msg
+    print("{} - {}".format(sys.stdout,msg))
 
 
 class ConfException(Exception):
@@ -182,7 +182,7 @@ def _byteify(data, ignore_dicts=False):
     if isinstance(data, dict) and not ignore_dicts:
         return {
             _byteify(key, ignore_dicts=True): _byteify(value, ignore_dicts=True)
-            for key, value in data.iteritems()
+            for key, value in data.items()
         }
     # if it's anything else, return it in its original form
     return data

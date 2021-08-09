@@ -15,7 +15,7 @@ class P4Host(Host):
 
         return r
 
-    def information(self):
+    def describe(self):
         print("************\n{}\ndefault interface:\n\t{}\n\t{}\n\t{}\n************".format(
             self.name,
             self.defaultIntf().name,
