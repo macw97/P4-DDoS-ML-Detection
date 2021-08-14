@@ -9,11 +9,20 @@ P4C = p4c-bm2-ss
 P4C_ARGS += --p4runtime-files $(BUILD_DIR)/$(basename $@).p4.p4info.txt
 RUN_SCRIPT = utils/run.py
 
+ifndef TOPO
+TOPO = topology.json
+endif
+
 source = $(wildcard *.p4)
 compiled_json := $(source:.p4=.json)
 
 ifndef DEFAULT_PROG
 DEFAULT_PROG = $(wildcard *.p4)
+endif
+DEFAULT_JSON = $(BUILD_DIR)/$(DEFAULT_PROG:.p4=.json)
+
+ifndef NO_P4
+run_args += -j $(DEFAULT_JSON)
 endif
 
 ifdef BMV2_SWITCH_EXE
@@ -28,12 +37,12 @@ run: build
 stop:
 	sudo mn -c
 
-build: createDirs $(compiled_json)
+build: dirs $(compiled_json)
 
 %.json: %.p4
 	$(P4C) --p4v 16 $(P4C_ARGS) -o $(BUILD_DIR)/$@ $<
 
-createDirs:
+dirs:
 	mkdir -p $(BUILD_DIR) $(PCAP_DIR) $(LOG_DIR)
 
 clean: stop

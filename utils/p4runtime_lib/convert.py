@@ -29,7 +29,9 @@ def matchesMac(mac_addr_string):
     return mac_pattern.match(mac_addr_string) is not None
 
 def encodeMac(mac_addr_string):
-    return mac_addr_string.replace(':', '').decode('hex')
+    print("convert: {}".format(mac_addr_string))
+    concated = mac_addr_string.replace(':', '')
+    return bytes.fromhex(concated)
 
 def decodeMac(encoded_mac_addr):
     return ':'.join(s.encode('hex') for s in encoded_mac_addr)
@@ -52,8 +54,8 @@ def encodeNum(number, bitwidth):
     num_str = '%x' % number
     if number >= 2 ** bitwidth:
         raise Exception("Number, {}, does not fit in {} bits".format(number, bitwidth))
-    return ('0' * (byte_len * 2 - len(num_str)) + num_str).decode('hex')
-
+    return bytes.fromhex('0' * (byte_len * 2 - len(num_str)) + num_str)
+    
 def decodeNum(encoded_number):
     return int(encoded_number.encode('hex'), 16)
 

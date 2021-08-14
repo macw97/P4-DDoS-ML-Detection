@@ -65,7 +65,6 @@ def check_switch_conf(sw_conf, workdir):
     required_keys = ["p4info"]
     files_to_check = ["p4info"]
     target_choices = ["bmv2"]
-
     if "target" not in sw_conf:
         raise ConfException("missing key 'target'")
     target = sw_conf['target']
@@ -87,7 +86,8 @@ def check_switch_conf(sw_conf, workdir):
 
 
 def program_switch(addr, device_id, sw_conf_file, workdir, proto_dump_fpath):
-    sw_conf = json_load_byteified(sw_conf_file)
+    sw_conf = json.loads(sw_conf_file.read())
+    print("sw-conf - {}".format(sw_conf))
     try:
         check_switch_conf(sw_conf=sw_conf, workdir=workdir)
     except ConfException as e:
@@ -189,6 +189,7 @@ def _byteify(data, ignore_dicts=False):
 
 
 def tableEntryToString(flow):
+    """
     if 'match' in flow:
         match_str = ['%s=%s' % (match_name, str(flow['match'][match_name])) for match_name in
                      flow['match']]
@@ -202,7 +203,9 @@ def tableEntryToString(flow):
     params = ', '.join(params)
     return "%s: %s => %s(%s)" % (
         flow['table'], match_str, flow['action_name'], params)
-
+    """
+    print("TableEntryToString\n")
+    print(flow)
 
 def groupEntryToString(rule):
     group_id = rule["multicast_group_id"]

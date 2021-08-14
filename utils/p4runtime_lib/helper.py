@@ -27,6 +27,7 @@ class P4InfoHelper(object):
         with open(p4_info_filepath) as p4info_f:
             google.protobuf.text_format.Merge(p4info_f.read(), p4info)
         self.p4info = p4info
+        print("P4INFO - {}".format(self.p4info))
 
     def get(self, entity_type, name=None, id=None):
         if name is not None and id is not None:
@@ -34,6 +35,7 @@ class P4InfoHelper(object):
 
         for o in getattr(self.p4info, entity_type):
             pre = o.preamble
+            print("For: pre.name - {}  pre.alias - {}".format(pre.name,pre.alias))
             if name:
                 if (pre.name == name or pre.alias == name):
                     return o
@@ -47,6 +49,7 @@ class P4InfoHelper(object):
             raise AttributeError("Could not find id {} of type {}".format(id, entity_type))
 
     def get_id(self, entity_type, name):
+        print("GetId: entity - {} , name - {}".format(entity_type,name))
         return self.get(entity_type, name=name).preamble.id
 
     def get_name(self, entity_type, id):
@@ -61,6 +64,7 @@ class P4InfoHelper(object):
         m = re.search("^get_(\w+)_id$", attr)
         if m:
             primitive = m.group(1)
+            print("Primitive : {}".format(primitive))
             return lambda name: self.get_id(primitive, name)
 
         # Synthesize convenience functions for id to name lookups
@@ -165,6 +169,7 @@ class P4InfoHelper(object):
                         action_params=None,
                         priority=None):
         table_entry = p4runtime_pb2.TableEntry()
+        print("Table_name: {}".format(table_name))
         table_entry.table_id = self.get_tables_id(table_name)
 
         if priority is not None:
@@ -173,7 +178,7 @@ class P4InfoHelper(object):
         if match_fields:
             table_entry.match.extend([
                 self.get_match_field_pb(table_name, match_field_name, value)
-                for match_field_name, value in match_fields.iteritems()
+                for match_field_name, value in match_fields.items()
             ])
 
         if default_action:
@@ -185,7 +190,7 @@ class P4InfoHelper(object):
             if action_params:
                 action.params.extend([
                     self.get_action_param_pb(action_name, field_name, value)
-                    for field_name, value in action_params.iteritems()
+                    for field_name, value in action_params.items()
                 ])
         return table_entry
 
