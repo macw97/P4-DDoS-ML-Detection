@@ -21,7 +21,7 @@ def sniffer(list_of_interfaces):
     lack of iface assign in sniff function ends with TypeError
     '<' not supported between instances of 'int' and 'str'
     '''
-    print("Sniffing on {} interface".format(list_of_interfaces))
+    print("Sniffing on {} interfaces".format(list_of_interfaces))
     sys.stdout.flush()
     sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x))
 
@@ -32,12 +32,10 @@ def link_parser(links):
             if not re.match(r"h[0-9]+",link[0]):
                 interface1 = "s{}-eth{}".format(link[0][1],link[0][4])
                 interface2 = "s{}-eth{}".format(link[1][1],link[1][4])
-                print("interface1: {}".format(interface1))
-                print("interface2: {}".format(interface2))
                 if interface1 not in list_of_interfaces:
-                    list_of_interfaces.append("s{}-eth{}".format(link[0][1],link[0][4]))
+                    list_of_interfaces.append(interface1)
                 if interface2 not in list_of_interfaces:
-                    list_of_interfaces.append("s{}-eth{}".format(link[1][1],link[1][4]))
+                    list_of_interfaces.append(interface2)
     
     sniffer(list_of_interfaces)
 
