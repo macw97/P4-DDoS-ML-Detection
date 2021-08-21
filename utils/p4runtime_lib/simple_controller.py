@@ -22,10 +22,10 @@ from . import bmv2
 from . import helper
 
 def error(msg):
-    print("{} - ERROR! {}".format(sys.stderr,msg))
+    sys.stderr.write("ERROR! - {}".format(msg))
 
 def info(msg):
-    print("{} - {}".format(sys.stdout,msg))
+    print("INFO - {}".format(msg))
 
 
 class ConfException(Exception):
@@ -189,7 +189,6 @@ def _byteify(data, ignore_dicts=False):
 
 
 def tableEntryToString(flow):
-    """
     if 'match' in flow:
         match_str = ['%s=%s' % (match_name, str(flow['match'][match_name])) for match_name in
                      flow['match']]
@@ -203,9 +202,6 @@ def tableEntryToString(flow):
     params = ', '.join(params)
     return "%s: %s => %s(%s)" % (
         flow['table'], match_str, flow['action_name'], params)
-    """
-    print("TableEntryToString\n")
-    print(flow)
 
 def groupEntryToString(rule):
     group_id = rule["multicast_group_id"]

@@ -27,7 +27,7 @@ class P4InfoHelper(object):
         with open(p4_info_filepath) as p4info_f:
             google.protobuf.text_format.Merge(p4info_f.read(), p4info)
         self.p4info = p4info
-        print("P4INFO - {}".format(self.p4info))
+        
 
     def get(self, entity_type, name=None, id=None):
         if name is not None and id is not None:
@@ -35,7 +35,6 @@ class P4InfoHelper(object):
 
         for o in getattr(self.p4info, entity_type):
             pre = o.preamble
-            print("For: pre.name - {}  pre.alias - {}".format(pre.name,pre.alias))
             if name:
                 if (pre.name == name or pre.alias == name):
                     return o
@@ -49,7 +48,6 @@ class P4InfoHelper(object):
             raise AttributeError("Could not find id {} of type {}".format(id, entity_type))
 
     def get_id(self, entity_type, name):
-        print("GetId: entity - {} , name - {}".format(entity_type,name))
         return self.get(entity_type, name=name).preamble.id
 
     def get_name(self, entity_type, id):
