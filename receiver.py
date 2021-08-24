@@ -6,27 +6,34 @@ from scapy.all import sniff
 from scapy.all import Packet
 from scapy.all import IP,UDP,ICMP,Raw
 
-def handle_packet(packet):
+from datetime import datetime
+
+def handle_packet(packet,file):
     print("Controller received a packet")
     print(packet.summary())
     if ICMP in packet and packet[ICMP].type == 8:
         ip_src = packet[IP].src
         ip_dst = packet[IP].dst
         ip_len = packet[IP].len
-        print("src:{}, dst:{}, length:{}".format(ip_src,ip_dst,ip_len))
-        os.system("echo {} {} {}".format(ip_src,ip_dst,ip_len))
+        print("time: {}, interface: {} , src:{} , dst:{} , length:{}".format(
+            datetime.now(),packet.sniffed_on,ip_src,ip_dst,ip_len))
+        file.write("{} {} {} {} {}\n".format(
+            datetime.now(),packet.sniffed_on,ip_src,ip_dst,ip_len
+        ))
+        #os.system("echo {} {} {}".format(ip_src,ip_dst,ip_len))
     
-def sniffer(list_of_interfaces):
+def sniffer(list_of_interfaces,file):
     '''
     lack of iface assign in sniff function ends with TypeError
     '<' not supported between instances of 'int' and 'str'
     '''
     print("Sniffing on {} interfaces".format(list_of_interfaces))
     sys.stdout.flush()
-    sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x))
+    sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x,file))
 
 def link_parser(links,target_switch):
     list_of_interfaces = []
+    file = open("logs/packet_sniffer.log","w")
     for link in links:
         if len(link) == 2:
             if not re.match(r"h[0-9]+",link[0]):
@@ -48,7 +55,7 @@ def link_parser(links,target_switch):
                     elif target_switch == "":
                         list_of_interfaces.append(interface2)
     
-    sniffer(list_of_interfaces)
+    sniffer(list_of_interfaces,file)
 
 
 def read_topology(switch_to_sniff,topo = "topology/topology.json"):
