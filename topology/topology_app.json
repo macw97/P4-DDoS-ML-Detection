@@ -1,0 +1,54 @@
+{
+    "p4_src": "main.p4",
+    "cli": true,
+    "pcap_dump": true,
+    "enable_log": true,
+    "topology": {
+        "assignment_strategy": "mixed",
+        "links": [["h1", "s1",
+            {"port2": 1,"intfName1": "eth0", "intfName2": "s1-eth1","addr1": "08:00:00:00:01:01","addr2": "08:00:00:00:01:00", "params1": {"ip": "10.0.1.1/24"}}],
+            ["s1", "s2",
+            {"port1": 2,"port2": 2,"intfName1": "s1-eth2", "intfName2": "s2-eth2","addr1": "08:00:00:00:01:00","addr2": "08:00:00:00:02:00"}],
+            ["s1", "s3",
+            {"port1": 3,"port2": 2,"intfName1": "s1-eth3", "intfName2": "s3-eth2","addr1": "08:00:00:00:01:00","addr2": "08:00:00:00:03:00"}],
+            ["s3", "s2",
+            {"port1": 3,"port2": 3,"intfName1": "s3-eth3", "intfName2": "s2-eth3","addr1": "08:00:00:00:03:00","addr2": "08:00:00:00:02:00"}], 
+            ["h2", "s2",
+            {"port2": 1,"intfName1": "eth0", "intfName2": "s2-eth1","addr1": "08:00:00:00:02:02","addr2": "08:00:00:00:02:00", "params1": {"ip": "10.0.2.2/24"}}], 
+            ["h3", "s3",
+            {"port2": 1,"intfName1": "eth0", "intfName2": "s3-eth1","addr1": "08:00:00:00:03:03","addr2": "08:00:00:00:03:00", "params1": {"ip": "10.0.3.3/24"}}]
+    ],
+    "hosts": {
+        "h1": {
+            "defaultRoute": "via 10.0.1.10",
+            "dhcp": false,
+            "log_enabled": true,
+            "log_dir": "topology/hosts/h1"
+        },
+        "h2": {
+            "defaultRoute": "via 10.0.2.20",
+            "dhcp": false,
+            "log_enabled": true,
+            "log_dir": "topology/hosts/h2"
+
+        },
+        "h3": {
+            "defaultRoute": "via 10.0.3.30",
+            "dhcp": false,
+            "log_enabled": true,
+            "log_dir": "topology/hosts/h3"
+        }
+    },
+    "switches": {
+        "s1": {
+            "cli_input": "topology/s1-runtime_command.txt"
+        },
+        "s2": {
+            "cli_input": "topology/s2-runtime_command.txt"
+        },
+        "s3": {
+            "cli_input": "topology/s3-runtime_command.txt"
+        }
+    }
+    }
+}
