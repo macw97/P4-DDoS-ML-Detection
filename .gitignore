@@ -3,4 +3,15 @@ build/
 __pycache__/
 logs/
 pcaps/
+log/
+pcap/
 
+#ignoring csv files contatining training sets
+*.csv
+
+#ignoring files created by building using p4-utils  
+main.p4i
+main.json
+
+#ignoring file created by building using p4-utils but only in root directory
+/topology.json
