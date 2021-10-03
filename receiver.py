@@ -33,32 +33,33 @@ def sniffer(list_of_interfaces,file):
 
 def link_parser(links,target_switch):
     list_of_interfaces = []
-    file = open("logs/packet_sniffer.log","w")
+    file = open("logs/packet_sniffer.log","w+")
     for link in links:
-        if len(link) == 2:
-            if not re.match(r"h[0-9]+",link[0]):
-                interface1 = "s{}-eth{}".format(link[0][1],link[0][4])
-                interface2 = "s{}-eth{}".format(link[1][1],link[1][4])
-                if interface1 not in list_of_interfaces:
-                    print("Link_parser: {}".format(interface1[:2]))
-                    if target_switch == interface1[:2]:
-                        print("Link_praser: true add {}".format(interface1))
-                        list_of_interfaces.append(interface1)
-                    elif target_switch == "":
-                        list_of_interfaces.append(interface1)
+        
+        if not re.match(r"h[0-9]+",link['source']) and not re.match(r"h[0-9]+",link['target']):
+            interface1 = link['intfName1']
+            interface2 = link['intfName2']
 
-                if interface2 not in list_of_interfaces:
-                    print("Link_parser: {}".format(interface2[:2]))
-                    if target_switch == interface2[:2]:
-                        print("Link_praser: true add {}".format(interface2))
-                        list_of_interfaces.append(interface2)
-                    elif target_switch == "":
-                        list_of_interfaces.append(interface2)
+            if interface1 not in list_of_interfaces:
+                print("Link_parser: {}".format(interface1[:2]))
+                if target_switch == interface1[:2]:
+                    print("Link_praser: true add {}".format(interface1))
+                    list_of_interfaces.append(interface1)
+                elif target_switch == "":
+                    list_of_interfaces.append(interface1)
+
+            if interface2 not in list_of_interfaces:
+                print("Link_parser: {}".format(interface2[:2]))
+                if target_switch == interface2[:2]:
+                    print("Link_praser: true add {}".format(interface2))
+                    list_of_interfaces.append(interface2)
+                elif target_switch == "":
+                    list_of_interfaces.append(interface2)
     
     sniffer(list_of_interfaces,file)
 
 
-def read_topology(switch_to_sniff,topo = "topology/topology.json"):
+def read_topology(switch_to_sniff,topo = "topology.json"):
     if os.path.isfile(topo):
         pass
     else:
