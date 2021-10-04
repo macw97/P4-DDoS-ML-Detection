@@ -1,4 +1,5 @@
 from p4utils.utils.sswitch_p4runtime_API import SimpleSwitchP4RuntimeAPI
+from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.helper import load_topo
 import influxdb, datetime, time, os, signal
 from sklearn import svm
@@ -17,10 +18,10 @@ class myController(object):
         for p4switch in self.topo.get_p4switches():
             print("P4 switch - {}".format(p4switch))
             thrift_port = self.topo.get_thrift_port(p4switch)
-            self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
-                                                                p4rt_path="main_p4rt.txt",
-                                                                json_path="main.json")
-            break  
+            self.controllers[p4switch] = SimpleSwitchThriftAPI(thrift_port)
+            #self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
+            #                                                    p4rt_path="main_p4rt.txt",
+            #                                                    json_path="main.json")  
 
 class gar_py:
         def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', kern_type = 'linear', dbg = False):
@@ -45,7 +46,6 @@ class gar_py:
                                         continue
                                 data_list = line.rsplit(", ")
                                 for i in range(len(data_list)):
-                                        print("i = {}, DATA - {}, type- {}".format(i,data_list[i],type(data_list[i])))
                                         if i < 2:
                                                 data_list[i] = float(data_list[i])
                                         else:
@@ -60,6 +60,7 @@ class gar_py:
 
         def work_time(self):
                 last_entry_time = "0"
+                print("In the work_time")
                 while True:
                         for new_entry in list(self.get_data(self.query).get_points(measurement = 'net')):
                                 if new_entry['time'] > last_entry_time:
