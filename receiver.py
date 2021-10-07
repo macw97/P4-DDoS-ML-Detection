@@ -20,7 +20,9 @@ def handle_packet(packet,file):
         file.write("{} {} {} {} {}\n".format(
             datetime.now(),packet.sniffed_on,ip_src,ip_dst,ip_len
         ))
-        #os.system("echo {} {} {}".format(ip_src,ip_dst,ip_len))
+        file.flush()
+        #os.system("echo net,interface={} src='{}',dst='{}',length={}i | nc localhost 6666".format(packet.sniffed_on,ip_src,ip_dst,ip_len))
+        #os.system("echo net,interface={} length={}i | nc -4 -D -w 5 localhost 6666".format(packet.sniffed_on,ip_len))
     
 def sniffer(list_of_interfaces,file):
     '''
@@ -33,7 +35,7 @@ def sniffer(list_of_interfaces,file):
 
 def link_parser(links,target_switch):
     list_of_interfaces = []
-    file = open("logs/packet_sniffer.log","w+")
+    file = open("logs/packet_sniffer.log","w")
     for link in links:
         
         if not re.match(r"h[0-9]+",link['source']) and not re.match(r"h[0-9]+",link['target']):
