@@ -2,6 +2,8 @@ from p4utils.utils.sswitch_p4runtime_API import SimpleSwitchP4RuntimeAPI
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.helper import load_topo
 import influxdb, datetime, time, os, signal
+from influxdb_client.client.util import date_utils
+from dateutil.tz import tzlocal
 from sklearn import svm
 blockip=[]
 
@@ -32,7 +34,7 @@ class gar_py:
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
                 self.svm_inst = svm.SVC(kernel = kern_type)
                 self.training_files = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
-                self.query = """select count(length) as a,mean(length) as b from net group by time(3s) order by time desc limit 3"""
+                self.query = "select count(length) as a,mean(length) as b from net group by time(3s) order by time desc limit 3"
                 self.train_svm()
                 self.controller=myController()
 
@@ -59,8 +61,8 @@ class gar_py:
                 self.svm_inst.fit(features, labels)
 
         def work_time(self):
+                date_utils.date_helper = date_utils.DateHelper(timezone=tzlocal())
                 last_entry_time = "0"
-                print("In the work_time")
                 while True:
                         for new_entry in list(self.get_data(self.query).get_points(measurement = 'net')):
                                 if new_entry['time'] > last_entry_time:
