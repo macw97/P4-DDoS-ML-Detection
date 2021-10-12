@@ -95,3 +95,8 @@ if measurement - net exists we can check database
 SELECT * FROM net
 ```
 
+To see normal format of time in influxdb CLI use
+```bash
+precision rfc3339
+```
+
