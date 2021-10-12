@@ -20,10 +20,10 @@ class myController(object):
         for p4switch in self.topo.get_p4switches():
             print("P4 switch - {}".format(p4switch))
             thrift_port = self.topo.get_thrift_port(p4switch)
-            self.controllers[p4switch] = SimpleSwitchThriftAPI(thrift_port)
-            #self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
-            #                                                    p4rt_path="main_p4rt.txt",
-            #                                                    json_path="main.json")  
+            #self.controllers[p4switch] = SimpleSwitchThriftAPI(thrift_port)
+            self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
+                                                                p4rt_path="main_p4rt.txt",
+                                                                json_path="main.json")  
 
 class gar_py:
         def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', kern_type = 'linear', dbg = False):

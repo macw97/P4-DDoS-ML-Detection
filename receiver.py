@@ -35,7 +35,7 @@ def sniffer(list_of_interfaces,file):
 
 def link_parser(links,target_switch):
     list_of_interfaces = []
-    file = open("logs/packet_sniffer.log","w")
+    file = open("log/packet_sniffer.log","w")
     for link in links:
         
         if not re.match(r"h[0-9]+",link['source']) and not re.match(r"h[0-9]+",link['target']):
