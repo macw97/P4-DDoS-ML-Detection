@@ -1,12 +1,9 @@
 TOPO = topology/topology_app.json
+DATA_MARKER = utils/tag_data.py
 
 BUILD_DIR = build
 PCAP_DIR = pcap
 LOG_DIR = log
-
-ifndef TOPO
-TOPO = topology.json
-endif
 
 all: run
 
@@ -19,3 +16,6 @@ build:
 clean: stop
 	rm -f *.pcap
 	rm -rf $(BUILD_DIR) $(PCAP_DIR) $(LOG_DIR)
+
+data_marking:
+	python3 ${DATA_MARKER} ${PARAMS}

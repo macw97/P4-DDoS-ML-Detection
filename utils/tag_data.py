@@ -1,16 +1,23 @@
 import influxdb 
 import sys
 
-QUERY = """select count(length) as a,mean(length) as b from net where time <= 1630017751155236000 group by time(3s) order by time desc limit 5"""
+QUERY_TIME_AGGREGATION = """select * from net order by time desc limit 1"""
+QUERY = """select count(length) as num_of_packet,mean(length) as size_of_data from net where time <= '' group by time(3s) order by time desc limit 10"""
 
 database = influxdb.InfluxDBClient('127.0.0.1',8086,'telegraf','telegraf','ddos_base')
 measurement_class = sys.argv[1]
-out_file = open("../DDoS_data_{}.csv".format(measurement_class),"w+")
-
+out_file = open("DDoS_data_{}.csv".format(measurement_class),"w+")
+db_time = None
+for measurement in database.query(QUERY_TIME_AGGREGATION).get_points(measurement = 'net'):
+    db_time = measurement['time']
+    
+timestamp = "'"+db_time+"'"
+QUERY = QUERY.replace("''",timestamp)
 
 for measurement in database.query(QUERY).get_points(measurement = 'net'):
-    cnt = measurement["a"]
-    meanlen = measurement["b"]
+    print("Measurement - {}".format(measurement))
+    cnt = measurement["num_of_packet"]
+    meanlen = measurement["size_of_data"]
     out_file.write("{}, {}, {}\n".format(cnt,meanlen,measurement_class))
 
 out_file.close()
