@@ -34,7 +34,9 @@ header ipv4_t {
 }
 
 struct metadata {
-    /* empty */
+    bit<9> ingress_port;
+    bit<9> egress_spec;
+    bit<9> egress_port;
 }
 
 struct headers {

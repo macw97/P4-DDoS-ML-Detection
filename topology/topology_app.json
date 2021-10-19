@@ -16,30 +16,23 @@
         "object_name": "P4RuntimeSwitch"
     },
     "topology": {
-        "assignment_strategy": "mixed",
-        "links": [["h1", "s1"],
+        "assignment_strategy":"mixed",
+        "links": [["h1", "s1",{"params1":{"ip":"10.0.1.1/24"}}],
             ["s1", "s2"],
             ["s1", "s3"],
             ["s3", "s2"], 
-            ["h2", "s2"], 
-            ["h3", "s3"]
+            ["h2", "s2",{"params1":{"ip":"10.0.2.2/24"}}], 
+            ["h3", "s3",{"params1":{"ip":"10.0.3.3/24"}}]
     ],
     "hosts": {
         "h1": {
-            "dhcp": false,
-            "log_enabled": true,
-            "log_dir": "topology/hosts/h1"
+            "dhcp": false
         },
         "h2": {
-            "dhcp": false,
-            "log_enabled": true,
-            "log_dir": "topology/hosts/h2"
-
+            "dhcp": false
         },
         "h3": {
-            "dhcp": false,
-            "log_enabled": true,
-            "log_dir": "topology/hosts/h3"
+            "dhcp": false
         }
     },
     "switches": {
