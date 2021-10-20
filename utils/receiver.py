@@ -21,8 +21,7 @@ def handle_packet(packet,file):
             datetime.now(),packet.sniffed_on,ip_src,ip_dst,ip_len
         ))
         file.flush()
-        #os.system("echo net,interface={} src='{}',dst='{}',length={}i | nc localhost 6666".format(packet.sniffed_on,ip_src,ip_dst,ip_len))
-        #os.system("echo net,interface={} length={}i | nc -4 -D -w 5 localhost 6666".format(packet.sniffed_on,ip_len))
+
     
 def sniffer(list_of_interfaces,file):
     '''
@@ -58,6 +57,7 @@ def link_parser(links,target_switch):
                 elif target_switch == "":
                     list_of_interfaces.append(interface2)
     
+    list_of_interfaces.append('s1-eth1')
     sniffer(list_of_interfaces,file)
 
 

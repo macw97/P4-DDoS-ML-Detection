@@ -1,10 +1,12 @@
 from p4utils.utils.sswitch_p4runtime_API import SimpleSwitchP4RuntimeAPI
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.helper import load_topo
+import p4utils.utils.p4runtime_API
 import influxdb, datetime, time, os, signal
 from influxdb_client.client.util import date_utils
 from dateutil.tz import tzlocal
 from sklearn import svm
+import argparse
 blockip=[]
 
 class myController(object):
@@ -14,16 +16,55 @@ class myController(object):
         self.controllers = {}
         self.connect_to_switches()
 
+    def setup_switch(self,switch):
+        print("============== Switch setup ================")
+        
+        for neighbour in self.topo.get_neighbors(switch):
+                if self.topo.isHost(neighbour):
+                        self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
+                                                            ['10.0.1.1/24'],['00:00:0a:00:01:01','1'])
+                if self.topo.isSwitch(neighbour):
+                        self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
+                                                            ['10.0.2.0/24'],['00:00:00:02:00:00','2'])
+                        self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
+                                                            ['10.0.3.0/24'],['00:00:00:03:00:00','3'])
+                        break
+                
+                
+                #host_mac = self.topo.get_host_mac(neighbour)
+                #host_mac = "0x"+host_mac.replace(":","")
+                #print("match_keys: {}".format(host_mac))
+                #print("action_params: {}".format(self.topo.node_to_node_port_num(switch,neighbour)))
+                #self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
+                #                                  [host_mac],
+                #                                  [str(self.topo.node_to_node_port_num(switch,neighbour))])
+
+        #self.controllers[switch]
+
+
+
     def connect_to_switches(self):
         device = 1
         grpc = 9559
+        #controller = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
+        #                                                        p4rt_path="main_p4rt.txt",
+        #                                                        json_path="main.json")
+        #controller.table_add('ipv4_lpm', 'ipv4_forward', ['00:00:0a:00:00:01'], ['1'])
+        
         for p4switch in self.topo.get_p4switches():
             print("P4 switch - {}".format(p4switch))
             thrift_port = self.topo.get_thrift_port(p4switch)
             #self.controllers[p4switch] = SimpleSwitchThriftAPI(thrift_port)
             self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
                                                                 p4rt_path="main_p4rt.txt",
-                                                                json_path="main.json")  
+                                                                json_path="main.json")
+            
+            self.controllers[p4switch].reset_state()
+            controller_thrift = SimpleSwitchThriftAPI(thrift_port)
+            controller_thrift.reset_state()   
+            self.setup_switch(p4switch)                             
+            break  
+        
 
 class gar_py:
         def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', kern_type = 'linear', dbg = False):
@@ -34,7 +75,7 @@ class gar_py:
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
                 self.svm_inst = svm.SVC(kernel = kern_type)
                 self.training_files = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
-                self.query = "select count(length) as a,mean(length) as b from net group by time(3s) order by time desc limit 3"
+                self.query = "select count(length) as num_of_packets,mean(length) as size_of_data from net group by time(3s) order by time desc limit 3"
                 self.train_svm()
                 self.controller=myController()
 
@@ -47,6 +88,9 @@ class gar_py:
                                 if line.isspace():
                                         continue
                                 data_list = line.rsplit(", ")
+                                if 'None' in data_list:
+                                        continue
+
                                 for i in range(len(data_list)):
                                         if i < 2:
                                                 data_list[i] = float(data_list[i])
@@ -61,15 +105,16 @@ class gar_py:
                 self.svm_inst.fit(features, labels)
 
         def work_time(self):
-                date_utils.date_helper = date_utils.DateHelper(timezone=tzlocal())
                 last_entry_time = "0"
                 while True:
                         for new_entry in list(self.get_data(self.query).get_points(measurement = 'net')):
+                                print("Entry - {} - {} - {}".format(new_entry['time'],new_entry['num_of_packets'],new_entry['size_of_data']))
+                                print("Old time - {}".format(last_entry_time))
                                 if new_entry['time'] > last_entry_time:
                                         last_entry_time = new_entry['time']
                                         if self.debug:
-                                                print("\n** New entry **\n\tICMP info: " + str(new_entry['a']) +" "+str(new_entry['b']))
-                                        self.ring_the_alarm(self.under_attack(new_entry['a'],new_entry['b']))
+                                                print("\n** New entry **\n\tICMP info: " + str(new_entry['num_of_packets']) +" "+str(new_entry['size_of_data']))
+                                        self.ring_the_alarm(self.under_attack(new_entry['num_of_packets'],new_entry['size_of_data']))
                         time.sleep(3)
 
         def under_attack(self, a, b):
