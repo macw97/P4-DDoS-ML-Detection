@@ -7,63 +7,69 @@ from influxdb_client.client.util import date_utils
 from dateutil.tz import tzlocal
 from sklearn import svm
 import argparse
+import re
 blockip=[]
+
+def ip_check(ip_address): 
+        if re.match(r'([0-9]+\.){3}[0-9]+\/[0-9]+',ip_address):
+                return ip_address
+        return '0.0.0.0/24'
+
+def mac_check(mac_address):
+        if re.match(r'([a-f0-9]{2}\:){5}[a-f0-9]{2}',mac_address):
+                return mac_address
+        return '00:00:00:00:00:00'
 
 class myController(object):
 
     def __init__(self):
         self.topo = load_topo('topology.json')
         self.controllers = {}
+        self.controllers_thrift = {}
         self.connect_to_switches()
 
     def setup_switch(self,switch):
-        print("============== Switch setup ================")
-        
-        for neighbour in self.topo.get_neighbors(switch):
-                if self.topo.isHost(neighbour):
-                        self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
-                                                            ['10.0.1.1/24'],['00:00:0a:00:01:01','1'])
-                if self.topo.isSwitch(neighbour):
-                        self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
-                                                            ['10.0.2.0/24'],['00:00:00:02:00:00','2'])
-                        self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
-                                                            ['10.0.3.0/24'],['00:00:00:03:00:00','3'])
-                        break
-                
-                
-                #host_mac = self.topo.get_host_mac(neighbour)
-                #host_mac = "0x"+host_mac.replace(":","")
-                #print("match_keys: {}".format(host_mac))
-                #print("action_params: {}".format(self.topo.node_to_node_port_num(switch,neighbour)))
-                #self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',
-                #                                  [host_mac],
-                #                                  [str(self.topo.node_to_node_port_num(switch,neighbour))])
+        print("============== P4Runtime switch setup ================")
+        print("{} switch setup: ".format(switch))
 
-        #self.controllers[switch]
+        table = open("topology/{}-runtime_command.txt".format(switch),"r")
+        self.controllers[switch].table_set_default('ipv4_lpm','drop')
+        for line in table.readlines():
+                
+                if re.match(r'^table_set_default',line):
+                        continue
+
+                params = line.split()
+
+                try: 
+                        ip = params[3]
+                        mac = params[5]
+                        port = params[6]
+                except IndexError as e:
+                        print("Uncorrect format of table to add in switch {}".format(switch))
+                        
+                print("Adding table entry:\n{} {} {}".format(ip_check(ip),mac_check(mac),port))
+                self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',[str(ip_check(ip))],[str(mac_check(mac)),str(port)])
+                
 
 
 
     def connect_to_switches(self):
-        device = 1
-        grpc = 9559
-        #controller = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
-        #                                                        p4rt_path="main_p4rt.txt",
-        #                                                        json_path="main.json")
-        #controller.table_add('ipv4_lpm', 'ipv4_forward', ['00:00:0a:00:00:01'], ['1'])
         
         for p4switch in self.topo.get_p4switches():
             print("P4 switch - {}".format(p4switch))
             thrift_port = self.topo.get_thrift_port(p4switch)
-            #self.controllers[p4switch] = SimpleSwitchThriftAPI(thrift_port)
-            self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=device,grpc_port=grpc,
+            id = self.topo.get_p4switch_id(p4switch)
+            grpc = self.topo.get_grpc_port(p4switch)
+            self.controllers_thrift[p4switch] = SimpleSwitchThriftAPI(thrift_port)
+            self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=id,grpc_port=grpc,
                                                                 p4rt_path="main_p4rt.txt",
                                                                 json_path="main.json")
             
             self.controllers[p4switch].reset_state()
-            controller_thrift = SimpleSwitchThriftAPI(thrift_port)
-            controller_thrift.reset_state()   
+            self.controllers_thrift[p4switch].reset_state()   
             self.setup_switch(p4switch)                             
-            break  
+
         
 
 class gar_py:
@@ -133,10 +139,6 @@ class gar_py:
         def ring_the_alarm(self, should_i_ring):
                 if should_i_ring:
                         print("ring_the_alarm")
-                        #if "10.0.0.1" not in blockip:
-                           #      self.controller.controllers["s1"].table_add("block_pkt", "drop", [str("10.0.0.1")], [])
-                           #      blockip.append("10.0.0.1")
-
  
 
 def ctrl_c_handler(s, f):
