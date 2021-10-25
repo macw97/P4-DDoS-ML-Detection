@@ -81,7 +81,7 @@ class gar_py:
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
                 self.svm_inst = svm.SVC(kernel = kern_type)
                 self.training_files = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
-                self.query = "select count(length) as num_of_packets,mean(length) as size_of_data from net group by time(3s) order by time desc limit 3"
+                self.query = """select count(length) as num_of_packets,mean(length) as size_of_data from net group by time(3s) order by time desc limit 5"""
                 self.train_svm()
                 self.controller=myController()
 
@@ -113,7 +113,10 @@ class gar_py:
         def work_time(self):
                 last_entry_time = "0"
                 while True:
-                        for new_entry in list(self.get_data(self.query).get_points(measurement = 'net')):
+                        self.get_data(self.query).get_points()
+                        entries = list(self.get_data(self.query).get_points(measurement = 'net'))
+                        for new_entry in sorted(entries, key = lambda item: item['time']):
+                        
                                 print("Entry - {} - {} - {}".format(new_entry['time'],new_entry['num_of_packets'],new_entry['size_of_data']))
                                 print("Old time - {}".format(last_entry_time))
                                 if new_entry['time'] > last_entry_time:
