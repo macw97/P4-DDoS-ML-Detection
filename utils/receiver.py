@@ -32,6 +32,17 @@ def sniffer(list_of_interfaces,file):
     sys.stdout.flush()
     sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x,file))
 
+def check(list_of_interfaces,switch,interface):
+    
+    if interface not in list_of_interfaces:
+                print("Link_parser: {}".format(interface[:2]))
+                if switch == interface[:2]:
+                    print("Link_praser: true add {}".format(interface))
+                    list_of_interfaces.append(interface)
+                elif switch == "":
+                    list_of_interfaces.append(interface)
+
+
 def link_parser(links,target_switch):
     list_of_interfaces = []
     file = open("log/packet_sniffer.log","w")
@@ -41,23 +52,9 @@ def link_parser(links,target_switch):
             interface1 = link['intfName1']
             interface2 = link['intfName2']
 
-            if interface1 not in list_of_interfaces:
-                print("Link_parser: {}".format(interface1[:2]))
-                if target_switch == interface1[:2]:
-                    print("Link_praser: true add {}".format(interface1))
-                    list_of_interfaces.append(interface1)
-                elif target_switch == "":
-                    list_of_interfaces.append(interface1)
-
-            if interface2 not in list_of_interfaces:
-                print("Link_parser: {}".format(interface2[:2]))
-                if target_switch == interface2[:2]:
-                    print("Link_praser: true add {}".format(interface2))
-                    list_of_interfaces.append(interface2)
-                elif target_switch == "":
-                    list_of_interfaces.append(interface2)
+            check(list_of_interfaces,target_switch,interface1)
+            check(list_of_interfaces,target_switch,interface2)
     
-    list_of_interfaces.append('s1-eth1')
     sniffer(list_of_interfaces,file)
 
 

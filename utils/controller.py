@@ -52,6 +52,14 @@ class myController(object):
                 self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',[str(ip_check(ip))],[str(mac_check(mac)),str(port)])
                 
 
+    def switch_table_delete(self,switch):
+        print("============== P4Runtime switch table delete ================")
+        print("{} switch table entry delete: ".format(switch))
+        # in s1 should delete 10.0.3.3 more likely 
+        if switch == 's1':
+                self.controllers[switch].table_delete_match('ipv4_lpm',['10.0.3.3/24'])
+        elif switch == 's3':
+                self.controllers[switch].table_delete_match('ipv4_lpm',['10.0.1.1/24'])
 
 
     def connect_to_switches(self):
@@ -81,7 +89,7 @@ class gar_py:
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
                 self.svm_inst = svm.SVC(kernel = kern_type)
                 self.training_files = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
-                self.query = """select count(length) as num_of_packets,mean(length) as size_of_data from net group by time(3s) order by time desc limit 5"""
+                self.query = """select count(length) as num_of_packets,mean(length) as size_of_data from net group by time(3s,-3s) order by time desc limit 3"""
                 self.train_svm()
                 self.controller=myController()
 
@@ -119,7 +127,7 @@ class gar_py:
                         
                                 print("Entry - {} - {} - {}".format(new_entry['time'],new_entry['num_of_packets'],new_entry['size_of_data']))
                                 print("Old time - {}".format(last_entry_time))
-                                if new_entry['time'] > last_entry_time:
+                                if new_entry['time'] >= last_entry_time:
                                         last_entry_time = new_entry['time']
                                         if self.debug:
                                                 print("\n** New entry **\n\tICMP info: " + str(new_entry['num_of_packets']) +" "+str(new_entry['size_of_data']))
@@ -142,6 +150,9 @@ class gar_py:
         def ring_the_alarm(self, should_i_ring):
                 if should_i_ring:
                         print("ring_the_alarm")
+                        self.controller.switch_table_delete('s1')
+                        self.controller.switch_table_delete('s3')
+
  
 
 def ctrl_c_handler(s, f):
