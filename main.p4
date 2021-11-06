@@ -3,6 +3,10 @@
 #include <v1model.p4>
 
 const bit<16> TYPE_IPV4 = 0x800;
+const bit<8> TYPE_ICMP = 0x01;
+const bit<8> TYPE_TCP = 0x06;
+const bit<8> TYPE_UDP = 0x11;
+
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
@@ -33,6 +37,40 @@ header ipv4_t {
     ip4Addr_t dstAddr;
 }
 
+header icmp_t {
+    bit<8> type;
+    bit<8> code;
+    bit<16> checksum;
+    bit<32> optData;
+}
+
+header udp_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<16> len;
+    bit<16> checksum;
+}
+
+header tcp_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<32> seqNum;
+    bit<32> ackNum;
+    bit<4>  dataOffset;
+    bit<4>  res;
+    bit<1>  cwr;
+    bit<1>  ece;
+    bit<1>  urg;
+    bit<1>  ack;
+    bit<1>  psh;
+    bit<1>  rst;
+    bit<1>  syn;
+    bit<1>  fin;
+    bit<16> windowSize;
+    bit<16> hrdChecksum;
+    bit<16> urgPtr;
+}
+
 struct metadata {
     bit<9> ingress_port;
     bit<9> egress_spec;
@@ -42,6 +80,9 @@ struct metadata {
 struct headers {
     ethernet_t   ethernet;
     ipv4_t       ipv4;
+    icmp_t       icmp;
+    udp_t        udp;
+    tcp_t        tcp;
 }
 
 /*************************************************************************
@@ -56,6 +97,7 @@ parser MyParser(packet_in packet,
     state start {
         transition parse_ethernet;
     }
+
     state parse_ethernet {
         packet.extract(hdr.ethernet);
         transition select(hdr.ethernet.etherType)
@@ -64,10 +106,28 @@ parser MyParser(packet_in packet,
             default: accept;
         }
     }
+
     state parse_ipv4 {
         packet.extract(hdr.ipv4);
+        transition select(hdr.ipv4.protocol)
+        {
+            TYPE_TCP: parse_tcp;
+            TYPE_UDP: parse_udp;
+            default: accept;
+        }
+    }
+
+    state parse_udp {
+        packet.extract(hdr.udp);
         transition accept;
     }
+
+    state parse_tcp {
+        packet.extract(hdr.tcp);
+        transition accept;
+    }
+
+
 }
 
 
@@ -161,6 +221,8 @@ control MyDeparser(packet_out packet, in headers hdr) {
     apply {
         packet.emit(hdr.ethernet);
         packet.emit(hdr.ipv4);
+        packet.emit(hdr.tcp);
+        packet.emit(hdr.udp);
     }
 }
 

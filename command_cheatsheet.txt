@@ -1,0 +1,18 @@
+h3 hping3 -V -1 -d 1000 --fast h1
+pingall
+xterm h2
+h3 ping -i 0,1 -s 800 h1
+h3 ping -i 0,2 -s 400 h1
+
+TCP connection working host3: 
+nc -l -p 1299
+
+host1:
+
+sr1(IP(dst="10.0.3.3")/TCP(dport=1299))
+
+Or any other free port
+
+UDP connection on h3:
+nc -l -u 1301
+
