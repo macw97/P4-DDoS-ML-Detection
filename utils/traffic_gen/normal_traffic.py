@@ -5,8 +5,8 @@ import scapy.all as scapy
 
 networks = {
     "10.0.1.0" : ["10.0.1.1","10.0.1.2","10.0.1.3"],
-    "10.0.2.0" : ["10.0.2.1","10.0.2.2","10.0.2.3"],
-    "10.0.3.0" : ["10.0.3.1","10.0.3.2","10.0.3.3"]
+    "10.0.2.0" : ["10.0.2.4","10.0.2.5","10.0.2.6"],
+    "10.0.3.0" : ["10.0.3.7","10.0.3.8","10.0.3.9"]
 }
 
 message = [
@@ -25,7 +25,7 @@ def packet(message_type,host):
     elif message_type == "ICMP":
         m = scapy.IP(dst=host)/scapy.ICMP()
     
-    return m;
+    return m
 
 def network_to_send_traffic(net):
     while True:
@@ -35,7 +35,7 @@ def network_to_send_traffic(net):
         print("Messages: {} , Amount: {}".format(mess_type,amount))
         to_send = packet(mess_type,host)
         if to_send is not None:
-            scapy.send(to_send, inter = 0.5 , count = amount)
+            scapy.send(to_send, inter = 0.2 , count = amount)
 
 
 

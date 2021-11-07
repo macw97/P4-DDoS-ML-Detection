@@ -4,23 +4,31 @@ import json
 import re
 from scapy.all import sniff
 from scapy.all import Packet
-from scapy.all import IP,UDP,ICMP,Raw
+from scapy.all import IP,UDP,ICMP,TCP,Raw
 
 from datetime import datetime
+
+def packet_summary(packet,file,type):
+    ip_src = packet[IP].src
+    ip_dst = packet[IP].dst
+    ip_len = packet[IP].len
+    print("time: {}, type: {}, interface: {} , src:{} , dst:{} , length:{}".format(
+        datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len))
+    file.write("{} {} {} {} {}\n".format(
+        datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
+    ))
 
 def handle_packet(packet,file):
     print("Controller received a packet")
     print(packet.summary())
     if ICMP in packet and packet[ICMP].type == 8:
-        ip_src = packet[IP].src
-        ip_dst = packet[IP].dst
-        ip_len = packet[IP].len
-        print("time: {}, interface: {} , src:{} , dst:{} , length:{}".format(
-            datetime.now(),packet.sniffed_on,ip_src,ip_dst,ip_len))
-        file.write("{} {} {} {} {}\n".format(
-            datetime.now(),packet.sniffed_on,ip_src,ip_dst,ip_len
-        ))
-        file.flush()
+        packet_summary(packet,file,"ICMP")
+    elif TCP in packet: 
+        packet_summary(packet,file,"TCP")
+    elif UDP in packet:
+        packet_summary(packet,file,"UDP")
+    
+    file.flush()
 
     
 def sniffer(list_of_interfaces,file):
