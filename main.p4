@@ -2,12 +2,17 @@
 #include <core.p4>
 #include <v1model.p4>
 
+#define CPU_CLONE_SESSION_ID 100
+#define CPU_PORT 3
+#define CLONED 1
+
 const bit<16> TYPE_IPV4 = 0x800;
 const bit<8> TYPE_ICMP = 0x01;
 const bit<8> TYPE_TCP = 0x06;
 const bit<8> TYPE_UDP = 0x11;
+const bit<8> TYPE_EXTRA = 0xA1;
 
-const bit<1> CNT_INDEX = 0;
+const bit<32> CNT_INDEX = 0;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -76,6 +81,13 @@ header tcp_t {
     bit<16> urgPtr;
 }
 
+header extra_t {
+    bit<32> total_pck;
+    bit<16> tcp_pck;
+    bit<16> udp_pck;
+    bit<16> icmp_pck;
+}
+
 struct metadata {
     bit<9> ingress_port;
     bit<9> egress_spec;
@@ -89,6 +101,7 @@ struct headers {
     icmp_t       icmp;
     udp_t        udp;
     tcp_t        tcp;
+    extra_t      extra;
 }
 
 /*************************************************************************
@@ -165,7 +178,7 @@ control MyIngress(inout headers hdr,
     }
 
     action do_copy() {
-        clone3(CloneType.I2E, (bit<32>)32w1, { standard_metadata });
+        clone3(CloneType.I2E, CPU_CLONE_SESSION_ID, { standard_metadata });
     }
     
     action add_cnt() {
@@ -173,6 +186,7 @@ control MyIngress(inout headers hdr,
         meta.pkt_count = meta.pkt_count + 1;
         pkt_cnt.write(CNT_INDEX, meta.pkt_count);
     }
+
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -213,7 +227,30 @@ control MyIngress(inout headers hdr,
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
-    apply {  }
+    apply { 
+        if(standard_metadata.instance_type == CLONED)
+        {
+            hdr.extra.setValid();
+            hdr.extra.total_pck = meta.pkt_count;
+            hdr.extra.tcp_pck = 16w2;
+            hdr.extra.udp_pck = 16w5;
+            hdr.extra.icmp_pck = 16w26;
+            if(hdr.ipv4.protocol == TYPE_ICMP)
+            {
+                hdr.icmp.setInvalid();
+            }
+            if(hdr.ipv4.protocol == TYPE_TCP)
+            {
+                hdr.tcp.setInvalid();
+            }
+            if(hdr.ipv4.protocol == TYPE_UDP)
+            {
+                hdr.udp.setInvalid();
+            }
+            hdr.ipv4.protocol = TYPE_EXTRA;
+
+        }
+     }
 }
 
 /*************************************************************************
@@ -251,6 +288,8 @@ control MyDeparser(packet_out packet, in headers hdr) {
         packet.emit(hdr.ipv4);
         packet.emit(hdr.tcp);
         packet.emit(hdr.udp);
+        packet.emit(hdr.extra);
+        
     }
 }
 

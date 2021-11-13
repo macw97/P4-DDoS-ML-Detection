@@ -5,6 +5,7 @@ import re
 from scapy.all import sniff
 from scapy.all import Packet
 from scapy.all import IP,UDP,ICMP,TCP,Raw
+from extra_header import Extra
 
 from datetime import datetime
 
@@ -12,8 +13,11 @@ def packet_summary(packet,file,type):
     ip_src = packet[IP].src
     ip_dst = packet[IP].dst
     ip_len = packet[IP].len
+    packet.show2()
     if packet.sniffed_on == 's1-eth3':
-        print("time: {}, interface: {}".format(datetime.now(),packet.sniffed_on))
+        if Extra in packet:
+            print("============== I GOT YOU ==============")
+        print("time: {}, interface: {}, length: {}".format(datetime.now(),packet.sniffed_on,packet[IP].len))
     else:
         print("time: {}, type: {}, interface: {}, src:{}, dst:{}, length:{}".format(
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len))
@@ -24,12 +28,15 @@ def packet_summary(packet,file,type):
 def handle_packet(packet,file):
     print("Controller received a packet")
     print(packet.summary())
-    if ICMP in packet and packet[ICMP].type == 8:
+    #if ICMP in packet and packet[ICMP].type == 8:
+    if ICMP in packet:
         packet_summary(packet,file,"ICMP")
     elif TCP in packet: 
         packet_summary(packet,file,"TCP")
     elif UDP in packet:
         packet_summary(packet,file,"UDP")
+    else:
+        packet_summary(packet,file,"EXTRA")
     
     file.flush()
 
