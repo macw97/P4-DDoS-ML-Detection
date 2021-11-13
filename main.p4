@@ -12,7 +12,10 @@ const bit<8> TYPE_TCP = 0x06;
 const bit<8> TYPE_UDP = 0x11;
 const bit<8> TYPE_EXTRA = 0xA1;
 
-const bit<32> CNT_INDEX = 0;
+const bit<32> CNT_INDEX = 32w0;
+const bit<32> UDP_INDEX = 32w1;
+const bit<32> TCP_INDEX = 32w2;
+const bit<32> ICMP_INDEX = 32w3;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -23,7 +26,7 @@ typedef bit<32> ip4Addr_t;
 
 
 
-register<bit<32>>(32w1) pkt_cnt;
+register<bit<32>>(32w4) pkt_cnt;
 
 
 header ethernet_t {
@@ -83,9 +86,9 @@ header tcp_t {
 
 header extra_t {
     bit<32> total_pck;
-    bit<16> tcp_pck;
-    bit<16> udp_pck;
-    bit<16> icmp_pck;
+    bit<32> tcp_pck;
+    bit<32> udp_pck;
+    bit<32> icmp_pck;
 }
 
 struct metadata {
@@ -93,6 +96,9 @@ struct metadata {
     bit<9> egress_spec;
     bit<9> egress_port;
     bit<32> pkt_count;
+    bit<32> udp_count;
+    bit<32> tcp_count;
+    bit<32> icmp_count;
 }
 
 struct headers {
@@ -181,10 +187,10 @@ control MyIngress(inout headers hdr,
         clone3(CloneType.I2E, CPU_CLONE_SESSION_ID, { standard_metadata });
     }
     
-    action add_cnt() {
-        pkt_cnt.read(meta.pkt_count, CNT_INDEX);
-        meta.pkt_count = meta.pkt_count + 1;
-        pkt_cnt.write(CNT_INDEX, meta.pkt_count);
+    action add_cnt(in bit<32> counter_index,inout bit<32> meta_value) {
+        pkt_cnt.read(meta_value, counter_index);
+        meta_value = meta_value + 1;
+        pkt_cnt.write(counter_index, meta_value);
     }
 
     table ipv4_lpm {
@@ -213,7 +219,20 @@ control MyIngress(inout headers hdr,
     apply {
 
         if(hdr.ipv4.isValid()){
-            add_cnt();
+            add_cnt(CNT_INDEX,meta.pkt_count);
+            
+            if(hdr.ipv4.protocol == TYPE_ICMP){
+                add_cnt(ICMP_INDEX,meta.icmp_count);
+            }
+
+            if(hdr.tcp.isValid()){
+                add_cnt(TCP_INDEX,meta.tcp_count);
+            }
+
+            if(hdr.udp.isValid()){
+                add_cnt(UDP_INDEX,meta.udp_count);
+            }
+
             copy.apply();
             ipv4_lpm.apply();
         }
@@ -231,10 +250,11 @@ control MyEgress(inout headers hdr,
         if(standard_metadata.instance_type == CLONED)
         {
             hdr.extra.setValid();
-            hdr.extra.total_pck = meta.pkt_count;
-            hdr.extra.tcp_pck = 16w2;
-            hdr.extra.udp_pck = 16w5;
-            hdr.extra.icmp_pck = 16w26;
+            pkt_cnt.read(hdr.extra.total_pck,CNT_INDEX);
+            pkt_cnt.read(hdr.extra.tcp_pck,TCP_INDEX);
+            pkt_cnt.read(hdr.extra.udp_pck,UDP_INDEX);
+            pkt_cnt.read(hdr.extra.icmp_pck,ICMP_INDEX);
+        
             if(hdr.ipv4.protocol == TYPE_ICMP)
             {
                 hdr.icmp.setInvalid();

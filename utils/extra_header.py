@@ -8,9 +8,9 @@ class Extra(Packet):
     name = "extra"
     fields_desc = [
         IntField("total_pck",0),
-        ShortField("tcp_pck",0),
-        ShortField("udp_pck",0),
-        ShortField("icmp_pck",0)
+        IntField("tcp_pck",0),
+        IntField("udp_pck",0),
+        IntField("icmp_pck",0)
     ]
     
     def mysummary(self):
