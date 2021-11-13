@@ -87,6 +87,7 @@ class gar_py:
                 self.port = port
                 self.dbname = db
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
+                #self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
                 self.svm_inst = svm.SVC(kernel = kern_type)
                 self.training_files = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
                 self.query = """select count(length) as num_of_packets,mean(length) as size_of_data from net group by time(3s,-3s) order by time desc limit 3"""

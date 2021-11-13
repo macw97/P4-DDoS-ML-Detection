@@ -7,7 +7,7 @@ const bit<8> TYPE_ICMP = 0x01;
 const bit<8> TYPE_TCP = 0x06;
 const bit<8> TYPE_UDP = 0x11;
 
-
+const bit<1> CNT_INDEX = 0;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -15,6 +15,11 @@ const bit<8> TYPE_UDP = 0x11;
 typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
 typedef bit<32> ip4Addr_t;
+
+
+
+register<bit<32>>(32w1) pkt_cnt;
+
 
 header ethernet_t {
     macAddr_t dstAddr;
@@ -75,6 +80,7 @@ struct metadata {
     bit<9> ingress_port;
     bit<9> egress_spec;
     bit<9> egress_port;
+    bit<32> pkt_count;
 }
 
 struct headers {
@@ -157,7 +163,16 @@ control MyIngress(inout headers hdr,
         hdr.ethernet.dstAddr = dstAddr;
         hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
     }
+
+    action do_copy() {
+        clone3(CloneType.I2E, (bit<32>)32w1, { standard_metadata });
+    }
     
+    action add_cnt() {
+        pkt_cnt.read(meta.pkt_count, CNT_INDEX);
+        meta.pkt_count = meta.pkt_count + 1;
+        pkt_cnt.write(CNT_INDEX, meta.pkt_count);
+    }
     table ipv4_lpm {
         key = {
             hdr.ipv4.dstAddr: lpm;
@@ -171,8 +186,21 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
     
+
+
+    table copy {
+        actions = {
+            do_copy;
+        }
+        size = 1;
+        default_action = do_copy();
+    }
+
     apply {
+
         if(hdr.ipv4.isValid()){
+            add_cnt();
+            copy.apply();
             ipv4_lpm.apply();
         }
     }

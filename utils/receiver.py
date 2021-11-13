@@ -12,11 +12,14 @@ def packet_summary(packet,file,type):
     ip_src = packet[IP].src
     ip_dst = packet[IP].dst
     ip_len = packet[IP].len
-    print("time: {}, type: {}, interface: {} , src:{} , dst:{} , length:{}".format(
-        datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len))
-    file.write("{} {} {} {} {}\n".format(
-        datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
-    ))
+    if packet.sniffed_on == 's1-eth3':
+        print("time: {}, interface: {}".format(datetime.now(),packet.sniffed_on))
+    else:
+        print("time: {}, type: {}, interface: {}, src:{}, dst:{}, length:{}".format(
+            datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len))
+        file.write("{} {} {} {} {}\n".format(
+            datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
+        ))
 
 def handle_packet(packet,file):
     print("Controller received a packet")
@@ -63,6 +66,7 @@ def link_parser(links,target_switch):
             check(list_of_interfaces,target_switch,interface1)
             check(list_of_interfaces,target_switch,interface2)
     
+    list_of_interfaces.append('s1-eth3')
     sniffer(list_of_interfaces,file)
 
 
