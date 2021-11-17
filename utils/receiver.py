@@ -13,7 +13,6 @@ def packet_summary(packet,file,type):
     ip_src = packet[IP].src
     ip_dst = packet[IP].dst
     ip_len = packet[IP].len
-    packet.show2()
     if packet.sniffed_on == 's1-eth3':
         if Extra in packet:
             print("============== I GOT YOU ==============")
@@ -24,9 +23,10 @@ def packet_summary(packet,file,type):
         file.write("{} {} {} {} {}\n".format(
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
         ))
+    packet.show2()
 
 def handle_packet(packet,file):
-    print("Controller received a packet")
+    print("\n\n\n\n\n\n\nController received a packet")
     print(packet.summary())
     #if ICMP in packet and packet[ICMP].type == 8:
     if ICMP in packet:

@@ -16,4 +16,8 @@ class Extra(Packet):
     def mysummary(self):
         return self.sprintf("total_pck = %total_pck%, tcp_pck = %tcp_pck%, udp_pck = %udp_pck%, icmp_pck = %icmp_cpk%")
 
+    def extract_padding(self, s):
+        return "",s
+
 bind_layers(IP, Extra, proto= TYPE_EXTRA)
+bind_layers(Extra,Padding)

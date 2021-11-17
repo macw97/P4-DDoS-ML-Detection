@@ -16,6 +16,7 @@ const bit<32> CNT_INDEX = 32w0;
 const bit<32> UDP_INDEX = 32w1;
 const bit<32> TCP_INDEX = 32w2;
 const bit<32> ICMP_INDEX = 32w3;
+const bit<16> EXTRA_SIZE = 16w16;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -99,6 +100,7 @@ struct metadata {
     bit<32> udp_count;
     bit<32> tcp_count;
     bit<32> icmp_count;
+    bit<16> l4_size;
 }
 
 struct headers {
@@ -220,10 +222,6 @@ control MyIngress(inout headers hdr,
 
         if(hdr.ipv4.isValid()){
             add_cnt(CNT_INDEX,meta.pkt_count);
-            
-            if(hdr.ipv4.protocol == TYPE_ICMP){
-                add_cnt(ICMP_INDEX,meta.icmp_count);
-            }
 
             if(hdr.tcp.isValid()){
                 add_cnt(TCP_INDEX,meta.tcp_count);
@@ -231,6 +229,10 @@ control MyIngress(inout headers hdr,
 
             if(hdr.udp.isValid()){
                 add_cnt(UDP_INDEX,meta.udp_count);
+            }
+
+            if(hdr.ipv4.protocol == TYPE_ICMP){
+                add_cnt(ICMP_INDEX,meta.icmp_count);
             }
 
             copy.apply();
@@ -249,16 +251,14 @@ control MyEgress(inout headers hdr,
     apply { 
         if(standard_metadata.instance_type == CLONED)
         {
+            bit<16> ihl_copy;
+
             hdr.extra.setValid();
             pkt_cnt.read(hdr.extra.total_pck,CNT_INDEX);
             pkt_cnt.read(hdr.extra.tcp_pck,TCP_INDEX);
             pkt_cnt.read(hdr.extra.udp_pck,UDP_INDEX);
             pkt_cnt.read(hdr.extra.icmp_pck,ICMP_INDEX);
-        
-            if(hdr.ipv4.protocol == TYPE_ICMP)
-            {
-                hdr.icmp.setInvalid();
-            }
+            
             if(hdr.ipv4.protocol == TYPE_TCP)
             {
                 hdr.tcp.setInvalid();
@@ -267,7 +267,14 @@ control MyEgress(inout headers hdr,
             {
                 hdr.udp.setInvalid();
             }
+
+            if(hdr.ipv4.protocol == TYPE_ICMP)
+            {
+                hdr.icmp.setInvalid();
+            }
+
             hdr.ipv4.protocol = TYPE_EXTRA;
+            hdr.ipv4.totalLen = 16w36;
 
         }
      }
