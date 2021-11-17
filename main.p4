@@ -251,7 +251,6 @@ control MyEgress(inout headers hdr,
     apply { 
         if(standard_metadata.instance_type == CLONED)
         {
-            bit<16> ihl_copy;
 
             hdr.extra.setValid();
             pkt_cnt.read(hdr.extra.total_pck,CNT_INDEX);
@@ -274,7 +273,7 @@ control MyEgress(inout headers hdr,
             }
 
             hdr.ipv4.protocol = TYPE_EXTRA;
-            hdr.ipv4.totalLen = 16w36;
+            hdr.ipv4.totalLen = 16w20 + EXTRA_SIZE;
 
         }
      }
