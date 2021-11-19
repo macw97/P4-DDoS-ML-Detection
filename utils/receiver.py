@@ -73,6 +73,8 @@ def link_parser(links,target_switch):
             check(list_of_interfaces,target_switch,interface1)
             check(list_of_interfaces,target_switch,interface2)
     
+    list_of_interfaces.remove('s1-eth4')
+    list_of_interfaces.remove('s1-eth5')
     list_of_interfaces.append('s1-eth3')
     sniffer(list_of_interfaces,file)
 

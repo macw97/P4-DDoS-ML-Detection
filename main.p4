@@ -13,8 +13,8 @@ const bit<8> TYPE_UDP = 0x11;
 const bit<8> TYPE_EXTRA = 0xA1;
 
 const bit<32> CNT_INDEX = 32w0;
-const bit<32> UDP_INDEX = 32w1;
-const bit<32> TCP_INDEX = 32w2;
+const bit<32> TCP_INDEX = 32w1;
+const bit<32> UDP_INDEX = 32w2;
 const bit<32> ICMP_INDEX = 32w3;
 const bit<16> EXTRA_SIZE = 16w16;
 /*************************************************************************
@@ -25,10 +25,12 @@ typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
 typedef bit<32> ip4Addr_t;
 
-
-
 register<bit<32>>(32w4) pkt_cnt;
 
+const bit<32> LAST_SEND_TIME_INDEX = 32w0;
+const bit<48> TIME_TO_SEND = 48w3000000;
+
+register<bit<48>>(32w1) timestamp;
 
 header ethernet_t {
     macAddr_t dstAddr;
@@ -100,7 +102,6 @@ struct metadata {
     bit<32> udp_count;
     bit<32> tcp_count;
     bit<32> icmp_count;
-    bit<16> l4_size;
 }
 
 struct headers {
@@ -189,11 +190,17 @@ control MyIngress(inout headers hdr,
         clone3(CloneType.I2E, CPU_CLONE_SESSION_ID, { standard_metadata });
     }
     
+    action timestamp_update(in bit<32> timestamp_to_update_index)
+    {
+        timestamp.write(timestamp_to_update_index,standard_metadata.ingress_global_timestamp);
+    }
+
     action add_cnt(in bit<32> counter_index,inout bit<32> meta_value) {
         pkt_cnt.read(meta_value, counter_index);
         meta_value = meta_value + 1;
         pkt_cnt.write(counter_index, meta_value);
     }
+
 
     table ipv4_lpm {
         key = {
@@ -208,8 +215,6 @@ control MyIngress(inout headers hdr,
         default_action = drop();
     }
     
-
-
     table copy {
         actions = {
             do_copy;
@@ -221,6 +226,11 @@ control MyIngress(inout headers hdr,
     apply {
 
         if(hdr.ipv4.isValid()){
+
+            bit<48> ts = 0;
+            
+            timestamp.read(ts, LAST_SEND_TIME_INDEX);
+
             add_cnt(CNT_INDEX,meta.pkt_count);
 
             if(hdr.tcp.isValid()){
@@ -235,7 +245,11 @@ control MyIngress(inout headers hdr,
                 add_cnt(ICMP_INDEX,meta.icmp_count);
             }
 
-            copy.apply();
+            if(standard_metadata.ingress_global_timestamp - ts > TIME_TO_SEND)
+            {
+                timestamp_update(LAST_SEND_TIME_INDEX);
+                copy.apply();
+            }
             ipv4_lpm.apply();
         }
     }
