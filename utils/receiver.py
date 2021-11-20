@@ -10,25 +10,29 @@ from extra_header import Extra
 from datetime import datetime
 
 def packet_summary(packet,file,type):
-    ip_src = packet[IP].src
-    ip_dst = packet[IP].dst
-    ip_len = packet[IP].len
-    if packet.sniffed_on == 's1-eth3':
-        if Extra in packet:
-            print("============== I GOT YOU ==============")
-        print("time: {}, interface: {}, length: {}".format(datetime.now(),packet.sniffed_on,packet[IP].len))
+    
+    if Extra in packet:
+        total_pck = packet[Extra].total_pck
+        tcp_pck = packet[Extra].tcp_pck
+        udp_pck = packet[Extra].udp_pck
+        icmp_pck = packet[Extra].icmp_pck
+        file.write("{} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,udp_pck,icmp_pck))
     else:
+        ip_src = packet[IP].src
+        ip_dst = packet[IP].dst
+        ip_len = packet[IP].len
         print("time: {}, type: {}, interface: {}, src:{}, dst:{}, length:{}".format(
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len))
         file.write("{} {} {} {} {}\n".format(
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
         ))
+    
     packet.show2()
 
 def handle_packet(packet,file):
-    print("\n\n\n\n\n\n\nController received a packet")
+    print("\n\n\nController received a packet")
     print(packet.summary())
-    #if ICMP in packet and packet[ICMP].type == 8:
+
     if ICMP in packet:
         packet_summary(packet,file,"ICMP")
     elif TCP in packet: 
@@ -50,7 +54,7 @@ def sniffer(list_of_interfaces,file):
     sys.stdout.flush()
     sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x,file))
 
-def check(list_of_interfaces,switch,interface):
+def check(list_of_interfaces,switch,interface, only_metrics):
     
     if interface not in list_of_interfaces:
                 print("Link_parser: {}".format(interface[:2]))
@@ -61,25 +65,29 @@ def check(list_of_interfaces,switch,interface):
                     list_of_interfaces.append(interface)
 
 
-def link_parser(links,target_switch):
+def link_parser(links,target_switch, sniff_metrics_interface):
     list_of_interfaces = []
-    file = open("log/packet_sniffer.log","w")
-    for link in links:
-        
-        if not re.match(r"h[0-9]+",link['source']) and not re.match(r"h[0-9]+",link['target']):
-            interface1 = link['intfName1']
-            interface2 = link['intfName2']
-
-            check(list_of_interfaces,target_switch,interface1)
-            check(list_of_interfaces,target_switch,interface2)
     
-    list_of_interfaces.remove('s1-eth4')
-    list_of_interfaces.remove('s1-eth5')
-    list_of_interfaces.append('s1-eth3')
+    if sniff_metrics_interface is True:
+        file = open("log/metric_packets_sniffer.log","w")
+        list_of_interfaces.append('s1-eth3')
+        
+    else:
+        file = open("log/packet_sniffer.log","w")
+    
+        for link in links:
+        
+            if not re.match(r"h[0-9]+",link['source']) and not re.match(r"h[0-9]+",link['target']):
+                interface1 = link['intfName1']
+                interface2 = link['intfName2']
+
+                check(list_of_interfaces,target_switch,interface1, sniff_metrics_interface)
+                check(list_of_interfaces,target_switch,interface2, sniff_metrics_interface)
+    
     sniffer(list_of_interfaces,file)
 
 
-def read_topology(switch_to_sniff,topo = "topology.json"):
+def read_topology(switch_to_sniff, sniff_metrics_interface, topo = "topology.json"):
     if os.path.isfile(topo):
         pass
     else:
@@ -89,7 +97,7 @@ def read_topology(switch_to_sniff,topo = "topology.json"):
     with open(topo,'r') as file:
         topology = json.load(file)
     
-    link_parser(topology['links'],target_switch = switch_to_sniff)
+    link_parser(topology['links'], switch_to_sniff, sniff_metrics_interface)
 
 
 
@@ -100,5 +108,12 @@ if __name__ == '__main__':
         print("No information which switch interfaces to sniff: {}".format(e))
         switch = ""
         pass
+    
+    try:
+        only_metrics = sys.argv[2]
+    except IndexError as e:
+        print("Unclear if sniff only on metrics interface: {}".format(e))
+        only_metrics = False
+        pass
 
-    read_topology(switch_to_sniff = switch)
+    read_topology(switch, bool(only_metrics))
