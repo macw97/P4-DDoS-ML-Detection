@@ -23,7 +23,7 @@ def packet_summary(packet,file,type):
         ip_len = packet[IP].len
         print("time: {}, type: {}, interface: {}, src:{}, dst:{}, length:{}".format(
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len))
-        file.write("{} {} {} {} {}\n".format(
+        file.write("{} {} {} {} {} {}\n".format(
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
         ))
     
