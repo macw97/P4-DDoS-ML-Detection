@@ -1,5 +1,5 @@
 {
-    "p4_src": "main.p4",
+    "p4_src": "basic.p4",
     "cli": true,
     "pcap_dump": true,
     "enable_log": true,
@@ -61,12 +61,15 @@
     },
     "switches": {
         "s1": {
+            "p4_src": "main.p4",
             "cli_input": "topology/s1-runtime_command.txt"
         },
         "s2": {
+            "p4_src": "basic.p4",
             "cli_input": "topology/s2-runtime_command.txt"
         },
         "s3": {
+            "p4_src": "basic.p4",
             "cli_input": "topology/s3-runtime_command.txt"
         }
     }

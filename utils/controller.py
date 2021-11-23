@@ -6,9 +6,16 @@ import influxdb, datetime, time, os, signal
 from influxdb_client.client.util import date_utils
 from dateutil.tz import tzlocal
 from sklearn import svm
+import pandas
 import argparse
 import re
+import sys
 blockip=[]
+
+training_dataset = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
+metrics_dataset = ["./dataset_sdn.csv"]
+QUERY = """select count(length) as num_of_packets,mean(length) as size_of_data from ddos_b group by time(3s,-3s) order by time desc limit 3"""
+QUERY_METRICS = """select * from ddos_m"""
 
 def ip_check(ip_address): 
         if re.match(r'([0-9]+\.){3}[0-9]+\/[0-9]+',ip_address):
@@ -20,6 +27,7 @@ def mac_check(mac_address):
                 return mac_address
         return '00:00:00:00:00:00'
 
+
 class myController(object):
 
     def __init__(self):
@@ -28,6 +36,18 @@ class myController(object):
         self.controllers_thrift = {}
         self.connect_to_switches()
 
+    def handle_mirroring(self,switch,line):
+        params = line.split()
+        
+        try: 
+           mirroring_id = params[1]
+           egress_spec = params[2]
+        except IndexError as e:
+                print("not enough data for mirroring session add: {}".format(e))
+        
+        self.controllers_thrift[switch].mirroring_add(int(mirroring_id),int(egress_spec))
+
+
     def setup_switch(self,switch):
         print("============== P4Runtime switch setup ================")
         print("{} switch setup: ".format(switch))
@@ -35,8 +55,12 @@ class myController(object):
         table = open("topology/{}-runtime_command.txt".format(switch),"r")
         self.controllers[switch].table_set_default('ipv4_lpm','drop')
         for line in table.readlines():
-                
+
                 if re.match(r'^table_set_default',line):
+                        continue
+
+                if re.match(r'^mirroring_add',line):
+                        self.handle_mirroring(switch,line)
                         continue
 
                 params = line.split()
@@ -87,27 +111,32 @@ class gar_py:
                 self.port = port
                 self.dbname = db
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
-                #self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
                 self.svm_inst = svm.SVC(kernel = kern_type)
-                self.training_files = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
-                self.query = """select count(length) as num_of_packets,mean(length) as size_of_data from net group by time(3s,-3s) order by time desc limit 3"""
+                self.training_files = training_dataset
+                self.query = QUERY
                 self.train_svm()
                 self.controller=myController()
+        
 
         def train_svm(self):
                 features, labels = [], []
  
                 for fname in self.training_files:
                         meal = open(fname, "rt")
+
+
+                        data = pandas.read_csv(fname)
+
                         for line in meal:
                                 if line.isspace():
                                         continue
-                                data_list = line.rsplit(", ")
+                                data_list = line.rsplit(",")
+
                                 if 'None' in data_list:
                                         continue
 
                                 for i in range(len(data_list)):
-                                        if i < 2:
+                                        if i == len(data_list) - 1:
                                                 data_list[i] = float(data_list[i])
                                         else:
                                                 data_list[i] = int(data_list[i])
@@ -164,5 +193,16 @@ def ctrl_c_handler(s, f):
 
 if __name__ == "__main__":
         signal.signal(signal.SIGINT, ctrl_c_handler)
-        ai_bot = gar_py(db_host = '127.0.0.1', dbg = True)
+        
+        try:
+            base = sys.argv[1]
+        except IndexError as e:
+            print("Pick type 1 or type 2 of database: {}".format(e))
+
+        if base is "1":
+                base = "ddos_base"
+        elif base is "2":
+                base = "ddos_metric_base" 
+
+        ai_bot = gar_py(db_host = '127.0.0.1', db = base, dbg = True)
         ai_bot.work_time()

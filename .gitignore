@@ -13,5 +13,8 @@ pcap/
 main.p4i
 main.json
 main_p4rt.txt
+basic.p4i
+basic.json
+basic_p4rt.txt
 #ignoring file created by building using p4-utils but only in root directory
 /topology.json
