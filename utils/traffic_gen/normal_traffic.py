@@ -20,9 +20,9 @@ def packet(message_type,host):
 
     m = None
     if message_type == "TCP":
-        m = scapy.IP(dst=host)/scapy.TCP(dport=random.randrange(1200,2600,2))
+        m = scapy.IP(dst=host)/scapy.fuzz(scapy.TCP())
     elif message_type == "UDP":
-        m = scapy.IP(dst=host)/scapy.UDP(dport=random.randrange(1200,2600,2))
+        m = scapy.IP(dst=host)/scapy.UDP(dport=random.randint(1025,65534))
     elif message_type == "ICMP":
         m = scapy.IP(dst=host)/scapy.ICMP(type = 8, length = 48)
     
@@ -32,11 +32,11 @@ def network_to_send_traffic(net):
     while True:
         host = random.choice(networks[net])
         mess_type = random.choice(message)
-        amount = random.randint(1,10)
+        amount = random.randint(1,20)
         print("Messages: {} , Amount: {}".format(mess_type,amount))
         to_send = packet(mess_type,host)
         if to_send is not None:
-            scapy.send(to_send, inter = 0.2 , count = amount)
+            scapy.send(to_send, inter = 0.02 , count = amount, loop = 1)
 
 
 def ctrl_c_handler(s,f):
