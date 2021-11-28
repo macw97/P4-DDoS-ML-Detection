@@ -1,8 +1,11 @@
 import sys
 import os
 import random
-import scapy.all as scapy 
+from scapy.all import *
 import signal
+import concurrent.futures
+import urllib.request
+import time
 
 networks = {
     "10.0.1.0" : ["10.0.1.1","10.0.1.2"],
@@ -16,27 +19,42 @@ message = [
     "ICMP"
 ]
 
-def packet(message_type,host):
+random_packet_vec = []
+
+def packet(message_type,host,payload_size):
 
     m = None
     if message_type == "TCP":
-        m = scapy.IP(dst=host)/scapy.fuzz(scapy.TCP())
+        m = Ether()/IP(dst=host)/fuzz(TCP())/Raw(RandString(size=payload_size))
     elif message_type == "UDP":
-        m = scapy.IP(dst=host)/scapy.UDP(dport=random.randint(1025,65534))
+        m = Ether()/IP(dst=host)/fuzz(UDP())/Raw(RandString(size=payload_size))
     elif message_type == "ICMP":
-        m = scapy.IP(dst=host)/scapy.ICMP(type = 8, length = 48)
+        m = Ether()/IP(dst=host)/fuzz(ICMP())/Raw(RandString(size=payload_size))
     
     return m
 
 def network_to_send_traffic(net):
-    while True:
+    
+    for i in range(150):
         host = random.choice(networks[net])
         mess_type = random.choice(message)
-        amount = random.randint(1,20)
-        print("Messages: {} , Amount: {}".format(mess_type,amount))
-        to_send = packet(mess_type,host)
+        payload_size = random.randint(60,600)
+        to_send = packet(mess_type,host,payload_size)
+        print("Packet {} creation {} to {}".format(i,mess_type,host))
         if to_send is not None:
-            scapy.send(to_send, inter = 0.02 , count = amount, loop = 1)
+            random_packet_vec.append(to_send)
+        
+    while True:    
+        amount = random.randint(20,100)
+        p = random.choice(random_packet_vec)
+        if UDP in p:
+            print("Messages: UDP , Amount: {}".format(amount))
+        elif TCP in p:
+            print("Messages: TCP , Amount: {}".format(amount))
+        elif ICMP in p: 
+            print("Messages: ICMP , Amount: {}".format(amount))
+
+        sendpfast(p, pps = 500, loop = amount)
 
 
 def ctrl_c_handler(s,f):
