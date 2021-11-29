@@ -14,9 +14,12 @@ const bit<8> TYPE_EXTRA = 0xA1;
 
 const bit<32> CNT_INDEX = 32w0;
 const bit<32> TCP_INDEX = 32w1;
-const bit<32> UDP_INDEX = 32w2;
-const bit<32> ICMP_INDEX = 32w3;
-const bit<16> EXTRA_SIZE = 16w16;
+const bit<32> TCP_SYN_INDEX = 32w2;
+const bit<32> UDP_INDEX = 32w3;
+const bit<32> ICMP_INDEX = 32w4;
+const bit<32> LENGTH_INDEX = 32w5;
+
+const bit<16> EXTRA_SIZE = 16w24;
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
@@ -25,7 +28,7 @@ typedef bit<9>  egressSpec_t;
 typedef bit<48> macAddr_t;
 typedef bit<32> ip4Addr_t;
 
-register<bit<32>>(32w4) pkt_cnt;
+register<bit<32>>(32w6) pkt_cnt;
 
 const bit<32> LAST_SEND_TIME_INDEX = 32w0;
 const bit<48> TIME_TO_SEND = 48w3000000;
@@ -90,8 +93,10 @@ header tcp_t {
 header extra_t {
     bit<32> total_pck;
     bit<32> tcp_pck;
+    bit<32> tcp_syn_pck;
     bit<32> udp_pck;
     bit<32> icmp_pck;
+    bit<32> total_len;
 }
 
 struct metadata {
@@ -102,6 +107,8 @@ struct metadata {
     bit<32> udp_count;
     bit<32> tcp_count;
     bit<32> icmp_count;
+    bit<32> tcp_syn_count;
+    bit<32> length_count;
 }
 
 struct headers {
@@ -195,12 +202,11 @@ control MyIngress(inout headers hdr,
         timestamp.write(timestamp_to_update_index,standard_metadata.ingress_global_timestamp);
     }
 
-    action add_cnt(in bit<32> counter_index,inout bit<32> meta_value) {
+    action add_cnt(in bit<32> counter_index,inout bit<32> meta_value, in bit<32> increment_by_value) {
         pkt_cnt.read(meta_value, counter_index);
-        meta_value = meta_value + 1;
+        meta_value = meta_value + increment_by_value;
         pkt_cnt.write(counter_index, meta_value);
     }
-
 
     table ipv4_lpm {
         key = {
@@ -231,18 +237,22 @@ control MyIngress(inout headers hdr,
             
             timestamp.read(ts, LAST_SEND_TIME_INDEX);
 
-            add_cnt(CNT_INDEX,meta.pkt_count);
-
+            add_cnt(CNT_INDEX,meta.pkt_count,1);
+            add_cnt(LENGTH_INDEX,meta.length_count,standard_metadata.packet_length);
             if(hdr.tcp.isValid()){
-                add_cnt(TCP_INDEX,meta.tcp_count);
+                add_cnt(TCP_INDEX,meta.tcp_count,1);
+                if(hdr.tcp.syn == 0x01)
+                {
+                    add_cnt(TCP_SYN_INDEX,meta.tcp_syn_count,1);
+                }
             }
 
             if(hdr.udp.isValid()){
-                add_cnt(UDP_INDEX,meta.udp_count);
+                add_cnt(UDP_INDEX,meta.udp_count,1);
             }
 
             if(hdr.ipv4.protocol == TYPE_ICMP){
-                add_cnt(ICMP_INDEX,meta.icmp_count);
+                add_cnt(ICMP_INDEX,meta.icmp_count,1);
             }
 
             if(standard_metadata.ingress_global_timestamp - ts > TIME_TO_SEND)
@@ -257,20 +267,26 @@ control MyIngress(inout headers hdr,
 
 /*************************************************************************
 ****************  E G R E S S   P R O C E S S I N G   *******************
-*************************************************************************/
+************************************************************************
+truncate function cuts cloned and modified packet containing extra header
+to hardcoded size, because in earlier stages cloned packet could have
+big sizes with unecessary random data copied from original packet.
+*/
 
 control MyEgress(inout headers hdr,
                  inout metadata meta,
                  inout standard_metadata_t standard_metadata) {
+    
     apply { 
         if(standard_metadata.instance_type == CLONED)
         {
-
             hdr.extra.setValid();
             pkt_cnt.read(hdr.extra.total_pck,CNT_INDEX);
             pkt_cnt.read(hdr.extra.tcp_pck,TCP_INDEX);
+            pkt_cnt.read(hdr.extra.tcp_syn_pck,TCP_SYN_INDEX);
             pkt_cnt.read(hdr.extra.udp_pck,UDP_INDEX);
             pkt_cnt.read(hdr.extra.icmp_pck,ICMP_INDEX);
+            pkt_cnt.read(hdr.extra.total_len,LENGTH_INDEX);
             
             if(hdr.ipv4.protocol == TYPE_TCP)
             {
@@ -286,6 +302,8 @@ control MyEgress(inout headers hdr,
                 hdr.icmp.setInvalid();
             }
 
+            truncate(32w96);
+            
             hdr.ipv4.protocol = TYPE_EXTRA;
             hdr.ipv4.totalLen = 16w20 + EXTRA_SIZE;
 
