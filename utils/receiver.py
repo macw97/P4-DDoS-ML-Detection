@@ -9,6 +9,8 @@ from extra_header import Extra
 
 from datetime import datetime
 
+entropy_count = False
+
 def packet_summary(packet,file,type):
     
     if Extra in packet:
@@ -68,10 +70,9 @@ def check(list_of_interfaces,switch,interface, only_metrics):
 def link_parser(links,target_switch, sniff_metrics_interface):
     list_of_interfaces = []
     
-    if sniff_metrics_interface is True:
+    if sniff_metrics_interface == 1:
         file = open("log/metric_packets_sniffer.log","w")
         list_of_interfaces.append('s1-eth3')
-        
     else:
         file = open("log/packet_sniffer.log","w")
     
@@ -84,6 +85,11 @@ def link_parser(links,target_switch, sniff_metrics_interface):
                 check(list_of_interfaces,target_switch,interface1, sniff_metrics_interface)
                 check(list_of_interfaces,target_switch,interface2, sniff_metrics_interface)
     
+    if sniff_metrics_interface == 2:
+        list_of_interfaces.append('s1-eth3')
+        file = open("log/entropy_packets_sniffer.log","w")
+        entropy_count = True
+
     sniffer(list_of_interfaces,file)
 
 
@@ -116,4 +122,4 @@ if __name__ == '__main__':
         only_metrics = False
         pass
 
-    read_topology(switch, bool(only_metrics))
+    read_topology(switch, int(only_metrics))

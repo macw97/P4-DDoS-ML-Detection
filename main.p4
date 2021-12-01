@@ -307,6 +307,13 @@ control MyEgress(inout headers hdr,
             hdr.ipv4.protocol = TYPE_EXTRA;
             hdr.ipv4.totalLen = 16w20 + EXTRA_SIZE;
 
+            pkt_cnt.write(CNT_INDEX,0);
+            pkt_cnt.write(TCP_INDEX,0);
+            pkt_cnt.write(TCP_SYN_INDEX,0);
+            pkt_cnt.write(UDP_INDEX,0);
+            pkt_cnt.write(ICMP_INDEX,0);
+            pkt_cnt.write(LENGTH_INDEX,0);
+
         }
      }
 }
