@@ -6,19 +6,39 @@ from scapy.all import sniff
 from scapy.all import Packet
 from scapy.all import IP,UDP,ICMP,TCP,Raw
 from extra_header import Extra
-
+import ipaddress
+import numpy as np
 from datetime import datetime
+from math import log, e
 
 entropy_count = False
+entropy = 0
+src_vec = []
+
+def entropy_calc(base = None):
+    value,counts = np.unique(src_vec, return_counts = True)
+    norm_counts = counts/ counts.sum()
+    base = e if base is None else base
+    return -(norm_counts * np.log(norm_counts)/np.log(base)).sum()
+    
 
 def packet_summary(packet,file,type):
     
     if Extra in packet:
+        entropy = entropy_calc()
         total_pck = packet[Extra].total_pck
         tcp_pck = packet[Extra].tcp_pck
+        tcp_syn_pck = packet[Extra].tcp_syn_pck
         udp_pck = packet[Extra].udp_pck
         icmp_pck = packet[Extra].icmp_pck
-        file.write("{} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,udp_pck,icmp_pck))
+        total_len = packet[Extra].total_len
+        file.write("{} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,total_len,entropy))
+        src_vec.clear()
+        entropy = 0
+        packet.show2()
+    elif entropy_count == True:
+        ip_src = packet[IP].src
+        src_vec.append(ipaddress.ip_address(ip_src))
     else:
         ip_src = packet[IP].src
         ip_dst = packet[IP].dst
@@ -29,7 +49,7 @@ def packet_summary(packet,file,type):
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
         ))
     
-    packet.show2()
+    #packet.show2()
 
 def handle_packet(packet,file):
     print("\n\n\nController received a packet")
@@ -88,7 +108,6 @@ def link_parser(links,target_switch, sniff_metrics_interface):
     if sniff_metrics_interface == 2:
         list_of_interfaces.append('s1-eth3')
         file = open("log/entropy_packets_sniffer.log","w")
-        entropy_count = True
 
     sniffer(list_of_interfaces,file)
 
@@ -122,4 +141,6 @@ if __name__ == '__main__':
         only_metrics = False
         pass
 
+    if int(only_metrics) == 2:
+        entropy_count = True
     read_topology(switch, int(only_metrics))
