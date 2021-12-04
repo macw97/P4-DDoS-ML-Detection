@@ -10,13 +10,18 @@ import ipaddress
 import numpy as np
 from datetime import datetime
 from math import log, e
+from scipy.stats import entropy
 
 entropy_count = False
-entropy = 0
+entropy_val = 0
 src_vec = []
 
+def entropy_v2(base = None):
+    values, counts = np.unique(src_vec, return_counts= True)
+    return entropy(counts, base = base)
+
 def entropy_calc(base = None):
-    value,counts = np.unique(src_vec, return_counts = True)
+    values, counts = np.unique(src_vec, return_counts = True)
     norm_counts = counts/ counts.sum()
     base = e if base is None else base
     return -(norm_counts * np.log(norm_counts)/np.log(base)).sum()
@@ -25,16 +30,16 @@ def entropy_calc(base = None):
 def packet_summary(packet,file,type):
     
     if Extra in packet:
-        entropy = entropy_calc()
+        entropy_val = entropy_v2()
         total_pck = packet[Extra].total_pck
         tcp_pck = packet[Extra].tcp_pck
         tcp_syn_pck = packet[Extra].tcp_syn_pck
         udp_pck = packet[Extra].udp_pck
         icmp_pck = packet[Extra].icmp_pck
         total_len = packet[Extra].total_len
-        file.write("{} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,total_len,entropy))
+        file.write("{} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,total_len,entropy_val))
         src_vec.clear()
-        entropy = 0
+        entropy_val = 0
         packet.show2()
     elif entropy_count == True:
         ip_src = packet[IP].src
