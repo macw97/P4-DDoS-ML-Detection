@@ -13,10 +13,12 @@ from math import log, e
 from scipy.stats import entropy
 
 entropy_count = False
-entropy_val = 0
+entropy_src_ip_val = 0
+entropy_sport_val = 0
 src_vec = []
+src_port = []
 
-def entropy_v2(base = None):
+def entropy_v2(data,base = None):
     values, counts = np.unique(src_vec, return_counts= True)
     return entropy(counts, base = base)
 
@@ -30,19 +32,29 @@ def entropy_calc(base = None):
 def packet_summary(packet,file,type):
     
     if Extra in packet:
-        entropy_val = entropy_v2()
+        entropy_src_ip_val = entropy_v2(src_vec)
+        entropy_sport_val = entropy_v2(src_port)
         total_pck = packet[Extra].total_pck
         tcp_pck = packet[Extra].tcp_pck
         tcp_syn_pck = packet[Extra].tcp_syn_pck
         udp_pck = packet[Extra].udp_pck
         icmp_pck = packet[Extra].icmp_pck
         total_len = packet[Extra].total_len
-        file.write("{} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,total_len,entropy_val))
+        file.write("{} {} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,total_len,entropy_src_ip_val,entropy_sport_val))
         src_vec.clear()
-        entropy_val = 0
+        entropy_src_ip_val = 0
+        entropy_sport_val = 0
         packet.show2()
     elif entropy_count == True:
         ip_src = packet[IP].src
+
+        if TCP in packet:
+            ip_port = packet[TCP].sport
+            src_port.append(int(ip_port))
+        elif UDP in packet:
+            ip_port = packet[UDP].sport
+            src_port.append(int(ip_port))
+    
         src_vec.append(ipaddress.ip_address(ip_src))
     else:
         ip_src = packet[IP].src
@@ -54,7 +66,7 @@ def packet_summary(packet,file,type):
             datetime.now(),type,packet.sniffed_on,ip_src,ip_dst,ip_len
         ))
     
-    #packet.show2()
+    packet.show2()
 
 def handle_packet(packet,file):
     print("\n\n\nController received a packet")
