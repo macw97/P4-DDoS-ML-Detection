@@ -6,16 +6,33 @@ import influxdb, datetime, time, os, signal
 from influxdb_client.client.util import date_utils
 from dateutil.tz import tzlocal
 from sklearn import svm
-import pandas
 import argparse
 import re
 import sys
+import pandas as pd
+from tag_data import QUERY_ENTROPY, QUERY_METRICS
+
+QUERY = """select count(length) as num_of_packets,mean(length) as size_of_data from ddos_b group by time(3s,-3s) order by time desc limit 3"""
+
+ddos = {
+        "entropy": ("ddos_entropy","ddos_e",QUERY_ENTROPY),
+        "metric" : ("ddos_metric_base","ddos_m",QUERY_METRICS),
+        "base"   : ("ddos_base","ddos_b",QUERY)
+}
+"""
+TODO:
+1. Check if packet mirroring after p4runtime controller start works
+2. Deactivate deleting entries in lookup tables after ddos attack recognition
+3. Correct learning process - use SVM and RandomForest
+4. Slice datasets to learning and testing in 80/20 ratio
+5. Test working on real network 
+6. Fix concatenate of arrays when reading csv
+"""
+
 blockip=[]
 
 training_dataset = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
-metrics_dataset = ["./dataset_sdn.csv"]
-QUERY = """select count(length) as num_of_packets,mean(length) as size_of_data from ddos_b group by time(3s,-3s) order by time desc limit 3"""
-QUERY_METRICS = """select * from ddos_m"""
+#metrics_dataset = ["./dataset_sdn.csv"]
 
 def ip_check(ip_address): 
         if re.match(r'([0-9]+\.){3}[0-9]+\/[0-9]+',ip_address):
@@ -64,7 +81,7 @@ class myController(object):
                         continue
 
                 params = line.split()
-
+        
                 try: 
                         ip = params[3]
                         mac = params[5]
@@ -105,7 +122,7 @@ class myController(object):
         
 
 class gar_py:
-        def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', kern_type = 'linear', dbg = False):
+        def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', kern_type = 'linear', dbg = False, measurement_name = None, query = None):
                 self.debug = dbg
                 self.host = db_host
                 self.port = port
@@ -113,20 +130,27 @@ class gar_py:
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
                 self.svm_inst = svm.SVC(kernel = kern_type)
                 self.training_files = training_dataset
-                self.query = QUERY
+                self.measurement_name = measurement_name
+                self.query = query
                 self.train_svm()
                 self.controller=myController()
         
 
         def train_svm(self):
-                features, labels = [], []
- 
+                X = None
+                Y = None
+                X2 = None
+                Y2 = None
                 for fname in self.training_files:
-                        meal = open(fname, "rt")
+                        data = pd.read_csv(fname)
+                        if X is None and Y is None:
+                                X = data.iloc[:,:-1]
+                                Y = data.iloc[:,-1]
+                        else:
+                                X2 = data.iloc[:,:-1]
+                                Y2 = data.iloc[:,-1]
 
-
-                        data = pandas.read_csv(fname)
-
+                        """
                         for line in meal:
                                 if line.isspace():
                                         continue
@@ -144,32 +168,34 @@ class gar_py:
                                 features.append(data_list[:2])
                                 labels.append(data_list[2])
                         meal.close()
-                print("features= {}".format(features))
-                print("labels= {}".format(labels))
+                
+                """
+                #features = features.append(features)
+                #labels = pd.concat(labels)
+                features = X.append(X2)
+                labels = Y.append(Y2)
+                print("FEATURES :\n {}".format(features))
+                print("LABELS :\n {}".format(labels))
                 self.svm_inst.fit(features, labels)
 
         def work_time(self):
                 last_entry_time = "0"
                 while True:
-                        self.get_data(self.query).get_points()
-                        entries = list(self.get_data(self.query).get_points(measurement = 'net'))
+                        entries = list(self.get_data(self.query).get_points(measurement = self.measurement_name))
                         for new_entry in sorted(entries, key = lambda item: item['time']):
-                        
-                                print("Entry - {} - {} - {}".format(new_entry['time'],new_entry['num_of_packets'],new_entry['size_of_data']))
+                                print("Entry - {}".format(new_entry))
                                 print("Old time - {}".format(last_entry_time))
                                 if new_entry['time'] >= last_entry_time:
                                         last_entry_time = new_entry['time']
                                         if self.debug:
-                                                print("\n** New entry **\n\tICMP info: " + str(new_entry['num_of_packets']) +" "+str(new_entry['size_of_data']))
-                                        self.ring_the_alarm(self.under_attack(new_entry['num_of_packets'],new_entry['size_of_data']))
+                                                print("\n** New entry **\n\tinfo: {}".format(new_entry))
+                                        self.ring_the_alarm(self.under_attack(new_entry))
                         time.sleep(3)
 
-        def under_attack(self, a, b):
-                if b is None:
-                  return False
+        def under_attack(self,arg):
                 if self.debug:
-                        print("\tCurrent prediction: " + str(self.svm_inst.predict([[a,b]])[0]))
-                if self.svm_inst.predict([[a,b]])[0] == 1: 
+                        print("\tCurrent prediction: " + str(self.svm_inst.predict(arg)[0]))
+                if self.svm_inst.predict(arg)[0] == 1: 
                         return True
                 else:
                         return False
@@ -180,8 +206,8 @@ class gar_py:
         def ring_the_alarm(self, should_i_ring):
                 if should_i_ring:
                         print("ring_the_alarm")
-                        self.controller.switch_table_delete('s1')
-                        self.controller.switch_table_delete('s3')
+                        #self.controller.switch_table_delete('s1')
+                        #self.controller.switch_table_delete('s3')
 
  
 
@@ -197,12 +223,14 @@ if __name__ == "__main__":
         try:
             base = sys.argv[1]
         except IndexError as e:
-            print("Pick type 1 or type 2 of database: {}".format(e))
+            print("Pick type of ddos database(entropy,metric,base): {}".format(e))
 
-        if base is "1":
-                base = "ddos_base"
-        elif base is "2":
-                base = "ddos_metric_base" 
-
-        ai_bot = gar_py(db_host = '127.0.0.1', db = base, dbg = True)
-        ai_bot.work_time()
+        if base in ddos:
+                db_name,db_measure,db_query = ddos[base]
+                ai_bot = gar_py(
+                        db_host = '127.0.0.1',
+                        db = db_name, 
+                        dbg = True, 
+                        measurement_name = db_measure, 
+                        query = db_query)
+                ai_bot.work_time()

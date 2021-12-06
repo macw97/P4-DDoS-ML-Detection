@@ -8,8 +8,8 @@ databases = {
 }
 
 QUERY_TIME_AGGREGATION = """select * from net order by time desc limit 1"""
-QUERY_ENTROPY = """select * from ddos_e order by time desc limit 500"""
-QUERY_METRICS = """select * from ddos_m order by time desc limit 500"""
+QUERY_ENTROPY = """select * from ddos_e order by time desc limit 10"""
+QUERY_METRICS = """select * from ddos_m order by time desc limit 10"""
 QUERY_BASE = """select count(length) as num_of_packet,mean(length) as size_of_data from net where time <= '' group by time(3s) order by time desc limit 10"""
 
 class MetricCollecter:
