@@ -1,18 +1,26 @@
-h3 hping3 -V -1 -d 1000 --fast h1
-pingall
-xterm h2
-h3 ping -i 0,1 -s 800 h1
-h3 ping -i 0,2 -s 400 h1
-
 TCP connection working host3: 
 nc -l -p 1299
 
-host1:
+1. Entropy metrics collection:
 
-sr1(IP(dst="10.0.3.3")/TCP(dport=1299))
+receiver.py
+sudo python3 utils/receiver.py s1 2
 
-Or any other free port
+tag_data.py
+sudo python3 utils/tag_data.py entropy 1
 
-UDP connection on h3:
-nc -l -u 1301
+controller.py
+sudo python3 utils/controller.py entropy
+
+2. Metrics collection:
+
+receiver.py                                                                                                                        
+sudo python3 utils/receiver.py s1 1                                                                                                
+                                                                                                                                    
+tag_data.py                                                                                                                        
+sudo python3 utils/tag_data.py metric 1                                                                                           
+                                                                                                                                    
+controller.py                                                                                                                      
+sudo python3 utils/controller.py metric 
+
 

@@ -188,13 +188,24 @@ class gar_py:
                                 if new_entry['time'] >= last_entry_time:
                                         last_entry_time = new_entry['time']
                                         if self.debug:
-                                                print("\n** New entry **\n\tinfo: {}".format(new_entry))
-                                        self.ring_the_alarm(self.under_attack(new_entry))
+                                                print("\n** New entry **\ninfo: {}".format(new_entry))
+                                        
+                                        X_sample = [
+                                                new_entry['total_packets'],
+                                                new_entry['tcp_packets'],
+                                                new_entry['tcp_syn_packets'],
+                                                new_entry['udp_packets'],
+                                                new_entry['icmp_packets'],
+                                                new_entry['len_packets'],
+                                                new_entry['entropy'],
+                                                new_entry['entropy_port']
+                                        ]
+                                        self.ring_the_alarm(self.under_attack([X_sample]))
                         time.sleep(3)
 
         def under_attack(self,arg):
                 if self.debug:
-                        print("\tCurrent prediction: " + str(self.svm_inst.predict(arg)[0]))
+                        print("\tCurrent prediction: " + str(self.svm_inst.predict(arg)))
                 if self.svm_inst.predict(arg)[0] == 1: 
                         return True
                 else:

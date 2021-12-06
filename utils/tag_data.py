@@ -1,5 +1,13 @@
 import influxdb 
 import sys
+import pandas as pd
+"""
+TODO:
+1. Creating csv add column names 
+"""
+headers_entropy = ['total_packets','tcp_packets','tcp_syn_packets','udp_packets','icmp_packets','len_packets','entropy_src_ip','entropy_src_port','label']
+headers_metric = ['total_packets','tcp_packets','tcp_syn_packets','udp_packets','icmp_packets','len_packets','label']
+headers_base = ['total_packets','avg_length','label']
 
 databases = {
     "entropy" : ("ddos_entropy","ddos_e"),
@@ -28,28 +36,21 @@ class MetricCollecter:
         return measurement['time']
 
     def collect(self,q):
-        file = open(self.out_file,"w+")
+        dataframe = []
         for measurement in self.client.query(q).get_points(measurement = self.measure_name):
-            total_packets = measurement['total_packets']
-            tcp_packets = measurement['tcp_packets']
-            tcp_syn_packets = measurement['tcp_syn_packets']
-            udp_packets = measurement['udp_packets']
-            icmp_packets = measurement['icmp_packets']
-            total_length_of_packets = measurement['len_packets']
-            entropy_of_src_ip = measurement['entropy']
-            entropy_of_src_port = measurement['entropy_port']
-            file.write("{}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(
-                total_packets,
-                tcp_packets,
-                tcp_syn_packets,
-                udp_packets,
-                icmp_packets,
-                total_length_of_packets,
-                entropy_of_src_ip,
-                entropy_of_src_port,
-                self.label
-            ))
-        file.close()
+            data = []
+            data.append(measurement['total_packets'])
+            data.append(measurement['tcp_packets'])
+            data.append(measurement['tcp_syn_packets'])
+            data.append(measurement['udp_packets'])
+            data.append(measurement['icmp_packets'])
+            data.append(measurement['len_packets'])
+            data.append(measurement['entropy'])
+            data.append(measurement['entropy_port'])
+            data.append(self.label)
+            dataframe.append(data)
+        dataframe = pd.DataFrame(dataframe, columns = headers_entropy)
+        dataframe.to_csv(self.out_file, index = False)
 
     def collect_metrics(self,q):
         file = open(self.out_file,"w+")
@@ -59,12 +60,14 @@ class MetricCollecter:
             tcp_syn_packets = measurement['tcp_syn_packets']
             udp_packets = measurement['udp_packets']
             icmp_packets = measurement['icmp_packets']
+            total_len = measurement['len_packets']
             file.write("{}, {}, {}, {}, {}, {}\n".format(
                 total_packets,
                 tcp_packets,
                 tcp_syn_packets,
                 udp_packets,
                 icmp_packets,
+                total_len,
                 self.label
             ))
         file.close()
