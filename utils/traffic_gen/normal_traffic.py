@@ -8,9 +8,9 @@ import urllib.request
 import time
 
 networks = {
-    "10.0.1.0" : ["10.0.1.1","10.0.1.2"],
-    "10.0.2.0" : ["10.0.2.4","10.0.2.5","10.0.2.6"],
-    "10.0.3.0" : ["10.0.3.7","10.0.3.8","10.0.3.9"]
+    "10.0.1.0" : ["10.0.1.1","10.0.1.2","10.0.1.4","10.0.1.5"],
+    "10.0.2.0" : ["10.0.2.6","10.0.2.7","10.0.2.8","10.0.2.9","10.0.2.10"],
+    "10.0.3.0" : ["10.0.3.11","10.0.3.12","10.0.3.13","10.0.3.14","10.0.3.15"]
 }
 
 message = [
@@ -38,14 +38,14 @@ def network_to_send_traffic(net):
     for i in range(150):
         host = random.choice(networks[net])
         mess_type = random.choice(message)
-        payload_size = random.randint(60,600)
+        payload_size = random.randint(30,400)
         to_send = packet(mess_type,host,payload_size)
         print("Packet {} creation {} to {}".format(i,mess_type,host))
         if to_send is not None:
             random_packet_vec.append(to_send)
         
     while True:    
-        amount = random.randint(20,100)
+        amount = random.randint(5,50)
         p = random.choice(random_packet_vec)
         if UDP in p:
             print("Messages: UDP , Amount: {}".format(amount))
@@ -54,8 +54,7 @@ def network_to_send_traffic(net):
         elif ICMP in p: 
             print("Messages: ICMP , Amount: {}".format(amount))
 
-        sendpfast(p, pps = 500, loop = amount)
-
+        sendpfast(p, pps = 1000, loop = amount)
 
 def ctrl_c_handler(s,f):
     print("\t\tCtrl+C")

@@ -1,12 +1,9 @@
 import influxdb 
 import sys
 import pandas as pd
-"""
-TODO:
-1. Creating csv add column names 
-"""
-headers_entropy = ['total_packets','tcp_packets','tcp_syn_packets','udp_packets','icmp_packets','len_packets','entropy_src_ip','entropy_src_port','label']
-headers_metric = ['total_packets','tcp_packets','tcp_syn_packets','udp_packets','icmp_packets','len_packets','label']
+
+headers_entropy = ['total_packets','tcp_packets','tcp_syn_packets','udp_packets','icmp_packets','avg_len','entropy_src_ip','entropy_src_port','label']
+headers_metric = ['total_packets','tcp_packets','tcp_syn_packets','udp_packets','icmp_packets','avg_len','label']
 headers_base = ['total_packets','avg_length','label']
 
 databases = {
@@ -44,7 +41,7 @@ class MetricCollecter:
             data.append(measurement['tcp_syn_packets'])
             data.append(measurement['udp_packets'])
             data.append(measurement['icmp_packets'])
-            data.append(measurement['len_packets'])
+            data.append(measurement['avg_len'])
             data.append(measurement['entropy'])
             data.append(measurement['entropy_port'])
             data.append(self.label)
@@ -60,14 +57,14 @@ class MetricCollecter:
             tcp_syn_packets = measurement['tcp_syn_packets']
             udp_packets = measurement['udp_packets']
             icmp_packets = measurement['icmp_packets']
-            total_len = measurement['len_packets']
+            avg_len = measurement['avg_len']
             file.write("{}, {}, {}, {}, {}, {}\n".format(
                 total_packets,
                 tcp_packets,
                 tcp_syn_packets,
                 udp_packets,
                 icmp_packets,
-                total_len,
+                avg_len,
                 self.label
             ))
         file.close()

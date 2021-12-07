@@ -40,7 +40,8 @@ def packet_summary(packet,file,type):
         udp_pck = packet[Extra].udp_pck
         icmp_pck = packet[Extra].icmp_pck
         total_len = packet[Extra].total_len
-        file.write("{} {} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,total_len,entropy_src_ip_val,entropy_sport_val))
+        avg_len = total_len/total_pck
+        file.write("{} {} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,avg_len,entropy_src_ip_val,entropy_sport_val))
         src_vec.clear()
         entropy_src_ip_val = 0
         entropy_sport_val = 0

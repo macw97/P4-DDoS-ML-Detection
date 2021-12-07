@@ -32,7 +32,6 @@ TODO:
 blockip=[]
 
 training_dataset = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
-#metrics_dataset = ["./dataset_sdn.csv"]
 
 def ip_check(ip_address): 
         if re.match(r'([0-9]+\.){3}[0-9]+\/[0-9]+',ip_address):
@@ -150,28 +149,6 @@ class gar_py:
                                 X2 = data.iloc[:,:-1]
                                 Y2 = data.iloc[:,-1]
 
-                        """
-                        for line in meal:
-                                if line.isspace():
-                                        continue
-                                data_list = line.rsplit(",")
-
-                                if 'None' in data_list:
-                                        continue
-
-                                for i in range(len(data_list)):
-                                        if i == len(data_list) - 1:
-                                                data_list[i] = float(data_list[i])
-                                        else:
-                                                data_list[i] = int(data_list[i])
-
-                                features.append(data_list[:2])
-                                labels.append(data_list[2])
-                        meal.close()
-                
-                """
-                #features = features.append(features)
-                #labels = pd.concat(labels)
                 features = X.append(X2)
                 labels = Y.append(Y2)
                 print("FEATURES :\n {}".format(features))
@@ -196,7 +173,7 @@ class gar_py:
                                                 new_entry['tcp_syn_packets'],
                                                 new_entry['udp_packets'],
                                                 new_entry['icmp_packets'],
-                                                new_entry['len_packets'],
+                                                new_entry['avg_len'],
                                                 new_entry['entropy'],
                                                 new_entry['entropy_port']
                                         ]
@@ -217,8 +194,7 @@ class gar_py:
         def ring_the_alarm(self, should_i_ring):
                 if should_i_ring:
                         print("ring_the_alarm")
-                        #self.controller.switch_table_delete('s1')
-                        #self.controller.switch_table_delete('s3')
+                        
 
  
 
