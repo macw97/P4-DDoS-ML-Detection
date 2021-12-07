@@ -13,9 +13,9 @@ import pandas as pd
 from tag_data import QUERY_ENTROPY, QUERY_METRICS
 
 QUERY = """select count(length) as num_of_packets,mean(length) as size_of_data from ddos_b group by time(3s,-3s) order by time desc limit 3"""
-
+QUERY_ENTROPY_2 = """select * from ddos_e order by time desc limit 3"""
 ddos = {
-        "entropy": ("ddos_entropy","ddos_e",QUERY_ENTROPY),
+        "entropy": ("ddos_entropy","ddos_e",QUERY_ENTROPY_2),
         "metric" : ("ddos_metric_base","ddos_m",QUERY_METRICS),
         "base"   : ("ddos_base","ddos_b",QUERY)
 }
