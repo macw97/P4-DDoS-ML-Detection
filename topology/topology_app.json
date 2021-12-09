@@ -3,6 +3,7 @@
     "cli": true,
     "pcap_dump": true,
     "enable_log": true,
+    "tasks_file": "topology/tasks.txt",
     "compiler_module":
     {
         "options":
