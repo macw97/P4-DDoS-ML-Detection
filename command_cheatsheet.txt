@@ -1,6 +1,3 @@
-TCP connection working host3: 
-nc -l -p 1299
-
 1. Entropy metrics collection:
 
 receiver.py
