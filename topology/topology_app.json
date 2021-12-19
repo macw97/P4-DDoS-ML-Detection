@@ -18,6 +18,9 @@
     },
     "topology": {
         "assignment_strategy":"mixed",
+        "default":{
+            "bw": 150
+        },
         "links": [["h1", "s1",{"params1":{"ip":"10.0.1.1/24"}}],
             ["h2", "s1",{"params1":{"ip":"10.0.1.2/24"}}],
             ["h3", "s1",{"params1":{"ip":"10.0.1.3/24"}}],
