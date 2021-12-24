@@ -3,7 +3,7 @@
     "cli": true,
     "pcap_dump": true,
     "enable_log": true,
-    "tasks_file": "topology/tasks_attack.txt",
+    "tasks_file": "topology/simple_task.txt",
     "compiler_module":
     {
         "options":
