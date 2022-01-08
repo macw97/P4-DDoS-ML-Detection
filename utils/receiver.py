@@ -43,6 +43,7 @@ def packet_summary(packet,file,type):
         avg_len = total_len/total_pck
         file.write("{} {} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,avg_len,entropy_src_ip_val,entropy_sport_val))
         src_vec.clear()
+        src_port.clear()
         entropy_src_ip_val = 0
         entropy_sport_val = 0
         packet.show2()
@@ -92,7 +93,7 @@ def sniffer(list_of_interfaces,file):
     '''
     print("Sniffing on {} interfaces".format(list_of_interfaces))
     sys.stdout.flush()
-    sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x,file))
+    sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x,file), store = 0)
 
 def check(list_of_interfaces,switch,interface, only_metrics):
     

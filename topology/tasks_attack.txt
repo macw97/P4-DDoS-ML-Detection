@@ -1,13 +1,27 @@
-h1 20 0 "iperf --server --time 220 --tcp --port 5400"
-h6 25 0 "iperf --client 10.0.1.1 --time 200 --tcp --bandwidth 10M --port 5400"
-h4 100 0 "iperf --server --time 200 --udp --port 7300"
-h9 110 0 "iperf --client 10.0.1.4 --time 150 --udp --bandwidth 2M --port 7300"
-h12 30 300 "python3 utils/traffic_gen/normal_traffic.py 10.0.1.0"
-h15 60 300 "python3 utils/traffic_gen/normal_traffic.py 10.0.1.0"
-h7 30 50 "python3 utils/traffic_gen/malicious_traffic.py tcp_syn_ack faster 10.0.1.0"
-h8 80 50 "python3 utils/traffic_gen/malicious_traffic.py udp flood 10.0.1.0"
-h10 130 50 "python3 utils/traffic_gen/malicious_traffic.py icmp_frag fast 10.0.1.0"
-h11 180 50 "python3 utils/traffic_gen/malicious_traffic.py fin flood 10.0.1.0"
-h13 240 50 "python3 utils/traffic_gen/malicious_traffic.py syn faster 10.0.1.0"
-h8 285 50 "python3 utils/traffic_gen/malicious_traffic.py tcp_syn_ack flood 10.0.1.0"
-h7 350 50 "hping3 --faster --data 150 10.0.1.5"
+h2 20 0 "ITGRecv -l receiver_h2_log"
+h6 25 0 "ITGSend -a 10.0.1.2 -t 1300000 -T TCP -C 1300 -n 750 150 -l send_h6_log"
+
+h4 20 0 "ITGRecv -l receiver_h4_log"
+h11 25 0 "ITGSend -a 10.0.1.4 -t 1300000 -T TCP -C 1400 -n 800 100 -l send_h11_log"
+
+h1 20 0 "ITGRecv -l receiver_h1_log"
+h9 25 0 "ITGSend -a 10.0.1.1 -t 1300000 -T UDP -C 800 -n 1250 300 -l send_h9_log"
+
+h5 20 0 "ITGRecv -l receiver_h5_log"
+h14 25 0 "ITGSend -a 10.0.1.5 -t 1300000 -T UDP -C 1000 -n 200 40 -l send_h14_log"
+
+h7 80 250 "hping3 --icmp --flood -d 200 10.0.1.2"
+h12 80 250 "hping3 --icmp --flood --rand-source -d 200 10.0.1.4"
+
+h8 300 300 "hping3 --icmp --flood -d 10000 10.0.1.1"
+h13 300 300 "hping3 --icmp --flood --rand-source -d 10000 10.0.1.2"
+
+h7 600 300 "hping3 --syn --rand-source --flood -p 1705 -d 400 10.0.1.5"
+h10 620 300 "hping3 --syn --flood -p 1995 -d 300 10.0.1.4"
+h13 600 300 "hping3 --syn --rand-source --flood -p 1705 -d 400 10.0.1.2"
+
+h8 900 220 "hping3 --udp --rand-source --flood -p 5420 -d 600 10.0.1.1"
+h12 900 220 "hping3 --udp --rand-source --flood -p 5452 -d 240 10.0.1.2"
+
+h7 1100 250 hping3 --rst --flood -p 2342 -d 300 10.0.1.4"
+h15 1100 250 "hping3 --rst --rand-source --flood -p 2800 -d 100 10.0.1.5"

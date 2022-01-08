@@ -1,16 +1,30 @@
-h2 20 0 "iperf --server --time 1250 --tcp --port 6560"
-h6 25 0 "iperf --client 10.0.1.2 --time 1200 --tcp --bandwidth 50M --port 6560"
-h4 40 0 "iperf --server --time 750 --tcp --port 7548"
-h11 45 0 "iperf --client 10.0.1.4 --time 700 --tcp --bandwidth 30M --port 7548"
-h5 30 0 "iperf --server --time 1050 --udp --port 7321"
-h14 35 0 "iperf --client 10.0.1.5 --time 1000 --udp --bandwidth 10M --port 7321"
-h1 50 0 "iperf --server --time 550 --udp --port 8378"
-h9 55 0 "iperf --client 10.0.1.1 --time 500 --udp --bandwidth 20M --port 8378"
-h1 850 0 "iperf --server --time 650 --udp --port 9478"
-h9 860 0 "iperf --client 10.0.1.1 --time 600 --udp --bandwidth 5M --port 9478"
+h2 20 0 "iperf --server --time 810 --tcp --port 6560"
+h6 25 0 "iperf --client 10.0.1.2 --time 800 --tcp --bandwidth 30M --port 6560"
+
+h2 1000 0 "ITGRecv -l receiver_h2_log"
+h6 1005 0 "ITGSend -a 10.0.1.2 -t 2100000 -T TCP -C 1300 -n 750 150 -l send_h6_log"
+
+h4 700 0 "iperf --server --time 510 --tcp --port 7548"
+h11 705 0 "iperf --client 10.0.1.4 --time 500 --tcp --bandwidth 30M --port 7548"
+
+h4 1500 0 "ITGRecv -l receiver_h4_log"
+h11 1505 0 "ITGSend -a 10.0.1.4 -t 1600000 -T TCP -C 1800 -n 450 100 -l send_h11_log"
+
+h5 300 0 "iperf --server --time 1010 --udp --port 7321"
+h14 305 0 "iperf --client 10.0.1.5 --time 1000 --udp --bandwidth 5M --port 7321"
+
+h1 400 0 "iperf --server --time 1010 --udp --port 8378"
+h9 405 0 "iperf --client 10.0.1.1 --time 1000 --udp --bandwidth 5M --port 8378"
+
+h1 1500 0 "ITGRecv -l receiver_h1_log"
+h9 1505 0 "ITGSend -a 10.0.1.1 -t 1600000 -T UDP -C 800 -n 1250 300 -l send_h9_log"
+
+h5 1600 0 "ITGRecv -l receiver_h5_log"
+h14 1605 0 "ITGSend -a 10.0.1.5 -t 1500000 -T UDP -C 1400 -n 200 40 -l send_h14_log"
+
 h8 15 0 "python3 utils/traffic_gen/normal_traffic.py 10.0.1.0"
 h10 25 1200 "python3 utils/traffic_gen/normal_traffic.py 10.0.1.0"
-h12 30 1500 "python3 utils/traffic_gen/normal_traffic.py 10.0.1.0"
-h15 60 700 "python3 utils/traffic_gen/normal_traffic.py 10.0.1.0"
-h7 500 60 "ping 10.0.1.4"
-h7 1300 50 "ping 10.0.1.2"
+
+h7 500 500 "ping 10.0.1.4"
+h15 800 200 "ping 10.0.1.2"
+
