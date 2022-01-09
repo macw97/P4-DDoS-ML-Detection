@@ -3,7 +3,7 @@
     "cli": true,
     "pcap_dump": false,
     "enable_log": false,
-    "tasks_file": "topology/tasks_attack.txt",
+    "tasks_file": "topology/tasks.txt",
     "compiler_module":
     {
         "options":
@@ -19,7 +19,7 @@
     "topology": {
         "assignment_strategy":"mixed",
         "default":{
-            "bw": 150
+            "bw": 20
         },
         "links": [["h1", "s1",{"params1":{"ip":"10.0.1.1/24"}}],
             ["h2", "s1",{"params1":{"ip":"10.0.1.2/24"}}],
