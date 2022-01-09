@@ -1,27 +1,29 @@
 h2 20 0 "ITGRecv -l receiver_h2_log"
-h6 25 0 "ITGSend -a 10.0.1.2 -t 1300000 -T TCP -C 1300 -n 750 150 -l send_h6_log"
+h6 25 0 "ITGSend -a 10.0.1.2 -t 1225000 -T TCP -C 15000 -n 70 15 -l send_h6_log"
 
-h4 20 0 "ITGRecv -l receiver_h4_log"
-h11 25 0 "ITGSend -a 10.0.1.4 -t 1300000 -T TCP -C 1400 -n 800 100 -l send_h11_log"
+h4 30 0 "ITGRecv -l receiver_h4_log"
+h11 35 0 "ITGSend -a 10.0.1.4 -t 1215000 -T UDP -C 1000 -n 512 60 -l send_h11_log"
 
 h1 20 0 "ITGRecv -l receiver_h1_log"
-h9 25 0 "ITGSend -a 10.0.1.1 -t 1300000 -T UDP -C 800 -n 1250 300 -l send_h9_log"
+h9 25 0 "ITGSend -a 10.0.1.1 -t 1225000 -rp 80 -T TCP -C 150 -n 1520 100 -l send_h9_log"
 
-h5 20 0 "ITGRecv -l receiver_h5_log"
-h14 25 0 "ITGSend -a 10.0.1.5 -t 1300000 -T UDP -C 1000 -n 200 40 -l send_h14_log"
+h7 50 150 "hping3 --icmp -a 50.0.1.2 --interval u100 -d 100 10.0.1.2"
+h12 50 150 "hping3 --icmp -a 200.100.5.10 --interval u100 -d 100 10.0.1.2"
 
-h7 80 250 "hping3 --icmp --flood -d 200 10.0.1.2"
-h12 80 250 "hping3 --icmp --flood --rand-source -d 200 10.0.1.4"
+h8 200 250 "hping3 --syn -a 120.0.1.2 --interval u500 -d 500 10.0.1.2"
+h13 200 250 "hping3 --syn -a 80.20.4.5 --interval u100 -d 100 10.0.1.2"
 
-h8 300 300 "hping3 --icmp --flood -d 10000 10.0.1.1"
-h13 300 300 "hping3 --icmp --flood --rand-source -d 10000 10.0.1.2"
+h10 450 200 "hping3 --udp -a 22.21.5.2 --faster -p 5420 -d 1000 10.0.1.2"
+h15 450 200 "hping3 --udp -a 160.82.45.25 --interval u50 -p 5452 -d 50 10.0.1.2"
 
-h7 600 300 "hping3 --syn --rand-source --flood -p 1705 -d 400 10.0.1.5"
-h10 620 300 "hping3 --syn --flood -p 1995 -d 300 10.0.1.4"
-h13 600 300 "hping3 --syn --rand-source --flood -p 1705 -d 400 10.0.1.2"
+h7 650 150 "hping3 --icmp --rand-source --interval u200 -d 200 10.0.1.2"
+h12 650 150 "hping3 --icmp --rand-source --interval u100 -d 100 10.0.1.2"
 
-h8 900 220 "hping3 --udp --rand-source --flood -p 5420 -d 600 10.0.1.1"
-h12 900 220 "hping3 --udp --rand-source --flood -p 5452 -d 240 10.0.1.2"
+h10 800 150 "hping3 --syn --rand-source --interval u1000 -d 1000 10.0.1.2"
+h15 800 150 "hping3 --syn --rand-source --interval u100 -d 100 10.0.1.2"
 
-h7 1100 250 hping3 --rst --flood -p 2342 -d 300 10.0.1.4"
-h15 1100 250 "hping3 --rst --rand-source --flood -p 2800 -d 100 10.0.1.5"
+h8 950 150 "hping3 --udp --rand-source --flood -p 5420 10.0.1.2"
+h12 950 150 "hping3 --udp --rand-source --flood -p 5452 10.0.1.2"
+
+h7 1100 150 "hping3 --icmp --flood -d 10000 10.0.1.2"
+h13 1100 150 "hping3 --icmp --flood -d 10000 10.0.1.2"
