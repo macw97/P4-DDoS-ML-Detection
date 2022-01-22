@@ -1,11 +1,11 @@
 h2 20 0 "ITGRecv -l receiver_h2_log"
-h6 25 0 "ITGSend -a 10.0.1.2 -t 180000 -T TCP -N 0.090 0.015 -n 80 20 -l send_h6_log"
+h6 25 0 "ITGSend -a 10.0.1.2 -t 180000 -T TCP -N 0.32 0.05 -n 80 20 -l send_h6_log"
 
 h4 30 0 "ITGRecv -l receiver_h4_log"
 h11 35 0 "ITGSend -a 10.0.1.4 -t 180000 -T UDP -N 1.15 0.3 -n 576 200 -l send_h11_log"
 
 h1 20 0 "ITGRecv -l receiver_h1_log"
-h9 25 0 "ITGSend -a 10.0.1.1 -t 180000 -rp 80 -T TCP -N 7 1 -n 1500 600 -l send_h9_log"
+h9 25 0 "ITGSend -a 10.0.1.1 -t 180000 -rp 80 -T TCP -N 2.6 0.5 -n 1500 600 -l send_h9_log"
 
 h7 20 500 "ping 10.0.1.4"
 h15 30 200 "ping 10.0.1.2"
