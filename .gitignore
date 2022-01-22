@@ -10,11 +10,11 @@ pcap/
 *.csv
 
 #ignoring files created by building using p4-utils  
-main.p4i
+*.p4i
+*p4rt.txt
+receiver_h*
+send_h*
 main.json
-main_p4rt.txt
-basic.p4i
 basic.json
-basic_p4rt.txt
 #ignoring file created by building using p4-utils but only in root directory
 /topology.json
