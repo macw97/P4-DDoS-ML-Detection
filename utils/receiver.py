@@ -14,9 +14,9 @@ from scipy.stats import entropy
 
 entropy_count = False
 entropy_src_ip_val = 0
-entropy_sport_val = 0
+entropy_dport_val = 0
 src_vec = []
-src_port = []
+dst_port = []
 
 def entropy_v2(data,base = None):
     values, counts = np.unique(src_vec, return_counts= True)
@@ -33,7 +33,7 @@ def packet_summary(packet,file,type):
     
     if Extra in packet:
         entropy_src_ip_val = entropy_v2(src_vec)
-        entropy_sport_val = entropy_v2(src_port)
+        entropy_dport_val = entropy_v2(dst_port)
         total_pck = packet[Extra].total_pck
         tcp_pck = packet[Extra].tcp_pck
         tcp_syn_pck = packet[Extra].tcp_syn_pck
@@ -41,21 +41,21 @@ def packet_summary(packet,file,type):
         icmp_pck = packet[Extra].icmp_pck
         total_len = packet[Extra].total_len
         avg_len = total_len/total_pck
-        file.write("{} {} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,avg_len,entropy_src_ip_val,entropy_sport_val))
+        file.write("{} {} {} {} {} {} {} {} {}\n".format(datetime.now(),total_pck,tcp_pck,tcp_syn_pck,udp_pck,icmp_pck,avg_len,entropy_src_ip_val,entropy_dport_val))
         src_vec.clear()
-        src_port.clear()
+        dst_port.clear()
         entropy_src_ip_val = 0
-        entropy_sport_val = 0
+        entropy_dport_val = 0
         packet.show2()
     elif entropy_count == True:
         ip_src = packet[IP].src
 
         if TCP in packet:
-            ip_port = packet[TCP].sport
-            src_port.append(int(ip_port))
+            ip_port = packet[TCP].dport
+            dst_port.append(int(ip_port))
         elif UDP in packet:
-            ip_port = packet[UDP].sport
-            src_port.append(int(ip_port))
+            ip_port = packet[UDP].dport
+            dst_port.append(int(ip_port))
     
         src_vec.append(ipaddress.ip_address(ip_src))
     else:
