@@ -1,16 +1,16 @@
-h2 20 0 "ITGRecv -l receiver_h2_log"
-h6 25 0 "ITGSend -a 10.0.1.2 -t 900000 -rp 80 -T TCP -N 0.45 0.05 -n 100 30 -poll -l send_h6_log"
+h2 15 0 "ITGRecv -l receiver_h2_log"
+h6 20 0 "ITGSend -a 10.0.1.2 -t 910000 -rp 80 -T TCP -N 0.45 0.05 -n 100 30 -poll -l send_h6_log"
 
-h4 30 0 "ITGRecv -l receiver_h4_log"
-h11 35 0 "ITGSend -a 10.0.1.4 -t 900000 -T TCP -N 1 0.2 -n 576 250 -poll -l send_h11_log"
+h4 20 0 "ITGRecv -l receiver_h4_log"
+h11 25 0 "ITGSend -a 10.0.1.4 -t 910000 -T TCP -N 1 0.2 -n 576 250 -poll -l send_h11_log"
 
-h1 20 0 "ITGRecv -l receiver_h1_log"
-h9 25 0 "ITGSend -a 10.0.1.1 -t 900000 -T UDP -N 3.1 0.5 -n 1500 400 -l send_h9_log"
+h1 15 0 "ITGRecv -l receiver_h1_log"
+h9 20 0 "ITGSend -a 10.0.1.1 -t 910000 -T UDP -N 3.1 0.5 -n 1500 400 -l send_h9_log"
 
 # ICMP IP spoofing 200 kbps
 
-h7 50 40 "hping3 --icmp -a 50.0.1.2 --interval u100 -d 100 10.0.1.2"
-h12 50 40 "hping3 --icmp -a 200.100.5.10 --interval u100 -d 100 10.0.1.2"
+h7 30 60 "hping3 --icmp -a 50.0.1.2 --interval u100 -d 100 10.0.1.4"
+h12 30 60 "hping3 --icmp -a 200.100.5.10 --interval u100 -d 100 10.0.1.2"
 
 # TCP SYN IP Spoofing 150 kbps
 
@@ -49,8 +49,8 @@ h13 400 40 "hping3 --icmp --flood -d 10000 10.0.1.2"
 
 # TCP SYN Scan 100 kbps
 
-h10 450 40 "hping3 --syn --scan 80-120,1000-1050 -a 20.1.3.2 --interval u100 -d 50 10.0.1.2"
-h15 450 40 "hping3 --syn --scan 80-120,1000-1050 -a 50.25.40.3 --interval u100 -d 50 10.0.1.2"
+h10 450 40 "hping3 --syn --scan 90-700,1000-7800 -a 20.1.3.2 --interval u100 -d 50 10.0.1.2"
+h15 450 40 "hping3 --syn --scan 90-820,9000-16800 -a 50.25.40.3 --interval u100 -d 50 10.0.1.2"
 
 # ICMP rand IP 150 kbps
 
@@ -79,13 +79,13 @@ h12 700 40 "hping3 --udp -a 17.40.2.9 --flood -p ++5452 10.0.1.2"
 
 # TCP SYN Scan 100kbps
 
-h10 750 40 "hping3 --syn --scan 80-120,1000-1050 -a 20.1.3.2 --interval u100 -d 50 10.0.1.2"
-h15 750 40 "hping3 --syn --scan 80-120,1000-1050 -a 50.25.40.3 --interval u100 -d 50 10.0.1.2"
+h10 750 40 "hping3 --syn --scan 90-120,1000-6050 -a 20.1.3.2 --interval u100 -d 50 10.0.1.2"
+h15 750 40 "hping3 --syn --scan 90-120,4000-9050 -a 50.25.40.3 --interval u100 -d 50 10.0.1.2"
 
 # TCP SYN 100kbps
 
-h10 800 40 "hping3 --syn --rand-source --interval u500 -p 4444 -d 100 10.0.1.2"
-h15 800 40 "hping3 --syn --rand-source --interval u500 -p 4555 -d 100 10.0.1.2"
+h7 800 40 "hping3 --syn --rand-source --interval u500 -p ++4444 -d 100 10.0.1.2"
+h12 800 40 "hping3 --syn --rand-source --interval u500 -p ++4555 -d 100 10.0.1.2"
 
 # TCP RST spoofed 200 kbps
 

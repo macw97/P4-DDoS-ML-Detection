@@ -19,7 +19,7 @@ src_vec = []
 dst_port = []
 
 def entropy_v2(data,base = None):
-    values, counts = np.unique(src_vec, return_counts= True)
+    values, counts = np.unique(data, return_counts= True)
     return entropy(counts, base = base)
 
 def entropy_calc(base = None):
