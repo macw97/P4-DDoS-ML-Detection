@@ -1,5 +1,4 @@
 from scapy.all import *
-import sys, os
 
 TYPE_EXTRA = 0xA1
 TYPE_IPV4 = 0x0800
@@ -21,5 +20,5 @@ class Extra(Packet):
     def extract_padding(self, s):
         return "",s
 
-bind_layers(IP, Extra, proto= TYPE_EXTRA)
-bind_layers(Extra,Padding)
+bind_layers(IP, Extra, proto = TYPE_EXTRA)
+bind_layers(Extra, Padding)
