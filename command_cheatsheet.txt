@@ -1,23 +1,16 @@
-1. Entropy metrics collection:
-
 receiver.py
-sudo python3 utils/receiver.py s1 2
+sudo python3 utils/receiver.py s1 
 
 tag_data.py
-sudo python3 utils/tag_data.py entropy 1
+
+Normal traffic:
+sudo python3 utils/tag_data.py 0
+
+Attack traffic: 
+sudo python3 utils/tag_data.py 1
 
 controller.py
 sudo python3 utils/controller.py entropy
 
-2. Metrics collection:
-
-receiver.py                                                                                                                        
-sudo python3 utils/receiver.py s1 1                                                                                                
-                                                                                                                                    
-tag_data.py                                                                                                                        
-sudo python3 utils/tag_data.py metric 1                                                                                           
-                                                                                                                                    
-controller.py                                                                                                                      
-sudo python3 utils/controller.py metric 
 
 
