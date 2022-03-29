@@ -18,12 +18,6 @@ To install newest version from github repo
 pip uninstall scapy
 pip install git+https://github.com/secdev/scapy.git
 ```
-
-## Utils
-
-Refactored code for easy compilation and mininet network start. Supported language python3.
-Supported language version for utils from [p4lang/tutorials](https://github.com/p4lang/tutorials) is python2.
-
 ## Config
 
 When installing telegraf remember to create copy of original default configuration
@@ -62,7 +56,7 @@ h2 ping h1
 ```
 In terminal no.2 
 ```bash
-sudo python3 receiver.py s1
+sudo python3 utils/receiver.py s1
 ```
 In terminal no.3
 ```bash
@@ -71,32 +65,31 @@ sudo telegraf --debug
 In terminal no.4
 ```bash
 sudo influx -username telegraf -password telegraf
-use ddos_base
+use ddos_entropy
 ```
 ### Part 2 - collecting and training
 
-In terminal with mininet opened - terminal no.1
+In topology_app.json field tasks_file can be changed between scenario with normal traffic generation and malicious traffic generation.
+Firstly setup network with 
 ```bash
-h2 ping h1
-h3 ping h1
-```
-In terminal no.2 we should see sniffed packets. We can CTRL+C receiver on termina no.2 and check database
-on terminal no.4
-```bash
-SHOW MEASUREMENTS ON ddos_base
-```
-If name - net didn't show up that means that probably something wrong happened with parsing so let's check
-```bash
-SHOW FIELD KEYS ON ddos_base
-``` 
-shouldn't show our fields parsed
-if measurement - net exists we can check database
-```bash
-SELECT * FROM net
+make run
 ```
 
+In terminal no.2 activate sniffing script. On terminal no.4 check if metrics are showing up in database
+```bash
+select from * ddos_e
+```
 To see normal format of time in influxdb CLI use
 ```bash
 precision rfc3339
+```
+After traffic was generated 
+```bash
+sudo python3 utils/tag_data.py 0
+```
+0 or 1 depends on type of generated traffic.
+Next we can start the controller
+```bash
+sudo python3 utils/controller.py entropy
 ```
 
