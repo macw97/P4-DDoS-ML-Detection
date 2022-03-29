@@ -1,23 +1,15 @@
 from p4utils.utils.sswitch_p4runtime_API import SimpleSwitchP4RuntimeAPI
 from p4utils.utils.sswitch_thrift_API import SimpleSwitchThriftAPI
 from p4utils.utils.helper import load_topo
-import p4utils.utils.p4runtime_API
-import influxdb, datetime, time, os, signal
-from influxdb_client.client.util import date_utils
-from dateutil.tz import tzlocal
-from sklearn import svm
-import argparse
+import influxdb, time, signal
+from sklearn.ensemble import RandomForestClassifier
 import re
 import sys
 import pandas as pd
-from tag_data import QUERY_ENTROPY, QUERY_METRICS
 
-QUERY = """select count(length) as num_of_packets,mean(length) as size_of_data from ddos_b group by time(3s,-3s) order by time desc limit 3"""
-QUERY_ENTROPY_2 = """select * from ddos_e order by time desc limit 3"""
+QUERY_ENTROPY = """select * from ddos_e order by time desc limit 3"""
 ddos = {
-        "entropy": ("ddos_entropy","ddos_e",QUERY_ENTROPY_2),
-        "metric" : ("ddos_metric_base","ddos_m",QUERY_METRICS),
-        "base"   : ("ddos_base","ddos_b",QUERY)
+        "entropy": ("ddos_entropy", "ddos_e", QUERY_ENTROPY)
 }
 """
 TODO:
@@ -52,7 +44,7 @@ class myController(object):
         self.controllers_thrift = {}
         self.connect_to_switches()
 
-    def handle_mirroring(self,switch,line):
+    def handle_mirroring(self, switch, line):
         params = line.split()
         
         try: 
@@ -61,22 +53,22 @@ class myController(object):
         except IndexError as e:
                 print("not enough data for mirroring session add: {}".format(e))
         
-        self.controllers_thrift[switch].mirroring_add(int(mirroring_id),int(egress_spec))
+        self.controllers_thrift[switch].mirroring_add(int(mirroring_id), int(egress_spec))
 
 
-    def setup_switch(self,switch):
+    def setup_switch(self, switch):
         print("============== P4Runtime switch setup ================")
         print("{} switch setup: ".format(switch))
 
         table = open("topology/{}-runtime_command.txt".format(switch),"r")
         self.controllers[switch].table_set_default('ipv4_lpm','drop')
+        
         for line in table.readlines():
-
-                if re.match(r'^table_set_default',line):
+                if re.match(r'^table_set_default', line):
                         continue
 
-                if re.match(r'^mirroring_add',line):
-                        self.handle_mirroring(switch,line)
+                if re.match(r'^mirroring_add', line):
+                        self.handle_mirroring(switch, line)
                         continue
 
                 params = line.split()
@@ -88,19 +80,9 @@ class myController(object):
                 except IndexError as e:
                         print("Uncorrect format of table to add in switch {}".format(switch))
                         
-                print("Adding table entry:\n{} {} {}".format(ip_check(ip),mac_check(mac),port))
-                self.controllers[switch].table_add('ipv4_lpm','ipv4_forward',[str(ip_check(ip))],[str(mac_check(mac)),str(port)])
+                print("Adding table entry:\n{} {} {}".format(ip_check(ip), mac_check(mac), port))
+                self.controllers[switch].table_add('ipv4_lpm', 'ipv4_forward', [str(ip_check(ip))], [str(mac_check(mac)), str(port)])
                 
-
-    def switch_table_delete(self,switch):
-        print("============== P4Runtime switch table delete ================")
-        print("{} switch table entry delete: ".format(switch))
-        # in s1 should delete 10.0.3.3 more likely 
-        if switch == 's1':
-                self.controllers[switch].table_delete_match('ipv4_lpm',['10.0.3.3/24'])
-        elif switch == 's3':
-                self.controllers[switch].table_delete_match('ipv4_lpm',['10.0.1.1/24'])
-
 
     def connect_to_switches(self):
         
@@ -110,9 +92,10 @@ class myController(object):
             id = self.topo.get_p4switch_id(p4switch)
             grpc = self.topo.get_grpc_port(p4switch)
             self.controllers_thrift[p4switch] = SimpleSwitchThriftAPI(thrift_port)
-            self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id=id,grpc_port=grpc,
-                                                                p4rt_path="main_p4rt.txt",
-                                                                json_path="main.json")
+            self.controllers[p4switch] = SimpleSwitchP4RuntimeAPI(device_id = id,
+                                                                  grpc_port = grpc,
+                                                                  p4rt_path = "main_p4rt.txt",
+                                                                  json_path = "main.json")
             
             self.controllers[p4switch].reset_state()
             self.controllers_thrift[p4switch].reset_state()   
@@ -127,18 +110,18 @@ class gar_py:
                 self.port = port
                 self.dbname = db
                 self.client = influxdb.InfluxDBClient(self.host, self.port, 'telegraf', 'telegraf', self.dbname)
-                self.svm_inst = svm.SVC(kernel = kern_type)
+                self.forest = RandomForestClassifier(criterion = "gini", max_depth = 5, random_state = True)
                 self.training_files = training_dataset
                 self.measurement_name = measurement_name
                 self.query = query
-                self.train_svm()
                 self.controller=myController()
+                self.train_svm()
         
 
         def train_svm(self):
                 X = None
-                Y = None
-                X2 = None
+                Y = None 
+                X2 = None 
                 Y2 = None
                 for fname in self.training_files:
                         data = pd.read_csv(fname)
@@ -153,7 +136,7 @@ class gar_py:
                 labels = Y.append(Y2)
                 print("FEATURES :\n {}".format(features))
                 print("LABELS :\n {}".format(labels))
-                self.svm_inst.fit(features, labels)
+                self.forest.fit(features, labels)
 
         def work_time(self):
                 last_entry_time = "0"
@@ -182,8 +165,8 @@ class gar_py:
 
         def under_attack(self,arg):
                 if self.debug:
-                        print("\tCurrent prediction: " + str(self.svm_inst.predict(arg)))
-                if self.svm_inst.predict(arg)[0] == 1: 
+                        print("\tCurrent prediction: " + str(self.forest.predict(arg)))
+                if self.forest.predict(arg)[0] == 1: 
                         return True
                 else:
                         return False
@@ -213,7 +196,7 @@ if __name__ == "__main__":
             print("Pick type of ddos database(entropy,metric,base): {}".format(e))
 
         if base in ddos:
-                db_name,db_measure,db_query = ddos[base]
+                db_name, db_measure, db_query = ddos[base]
                 ai_bot = gar_py(
                         db_host = '127.0.0.1',
                         db = db_name, 
