@@ -69,7 +69,6 @@ def sniffer(list_of_interfaces, file):
     scapy.sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x,file), store = 0)
 
 def check(list_of_interfaces, switch, interface):
-    
     if interface not in list_of_interfaces and switch == interface[:2]:
         print("Link_praser: true add {}".format(interface))
         list_of_interfaces.append(interface)
@@ -104,8 +103,6 @@ def read_topology(switch_to_sniff, topo = "topology.json"):
         topology = json.load(file)
     
     link_parser(topology['links'], switch_to_sniff)
-
-
 
 if __name__ == '__main__':
     try:

@@ -57,7 +57,6 @@ def actions(database_type, measure):
     if database_type == "entropy":
         collector.collect(QUERY_ENTROPY)
         
-
 if __name__ == "__main__":
     
     try:

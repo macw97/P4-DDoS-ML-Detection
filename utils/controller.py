@@ -24,7 +24,6 @@ def mac_check(mac_address):
                 return mac_address
         return '00:00:00:00:00:00'
 
-
 class myController(object):
 
     def __init__(self):
@@ -43,7 +42,6 @@ class myController(object):
                 print("not enough data for mirroring session add: {}".format(e))
         
         self.controllers_thrift[switch].mirroring_add(int(mirroring_id), int(egress_spec))
-
 
     def setup_switch(self, switch):
         print("============== P4Runtime switch setup ================")
@@ -70,8 +68,7 @@ class myController(object):
                         print("Uncorrect format of table to add in switch {}".format(switch))
                         
                 print("Adding table entry:\n{} {} {}".format(ip_check(ip), mac_check(mac), port))
-                self.controllers[switch].table_add('ipv4_lpm', 'ipv4_forward', [str(ip_check(ip))], [str(mac_check(mac)), str(port)])
-                
+                self.controllers[switch].table_add('ipv4_lpm', 'ipv4_forward', [str(ip_check(ip))], [str(mac_check(mac)), str(port)])        
 
     def connect_to_switches(self):
         
@@ -89,8 +86,6 @@ class myController(object):
             self.controllers[p4switch].reset_state()
             self.controllers_thrift[p4switch].reset_state()   
             self.setup_switch(p4switch)                             
-
-        
 
 class gar_py:
         def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', dbg = False, measurement_name = None, query = None):
@@ -168,13 +163,9 @@ class gar_py:
                         print("ring_the_alarm")
                         
 
- 
-
 def ctrl_c_handler(s, f):
-        print("\b\bShutting down MR. SVM... Bye!")
+        print("\b\bShutting down.....")
         exit(0)
-
-       
 
 if __name__ == "__main__":
         signal.signal(signal.SIGINT, ctrl_c_handler)
