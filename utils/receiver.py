@@ -64,10 +64,6 @@ def handle_packet(packet, file):
 
     
 def sniffer(list_of_interfaces, file):
-    '''
-    lack of iface assign in sniff function ends with TypeError
-    '<' not supported between instances of 'int' and 'str'
-    '''
     print("Sniffing on {} interfaces".format(list_of_interfaces))
     sys.stdout.flush()
     scapy.sniff(iface = list_of_interfaces, prn = lambda x: handle_packet(x,file), store = 0)

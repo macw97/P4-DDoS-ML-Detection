@@ -11,17 +11,6 @@ QUERY_ENTROPY = """select * from ddos_e order by time desc limit 3"""
 ddos = {
         "entropy": ("ddos_entropy", "ddos_e", QUERY_ENTROPY)
 }
-"""
-TODO:
-1. Check if packet mirroring after p4runtime controller start works
-2. Deactivate deleting entries in lookup tables after ddos attack recognition
-3. Correct learning process - use SVM and RandomForest
-4. Slice datasets to learning and testing in 80/20 ratio
-5. Test working on real network 
-6. Fix concatenate of arrays when reading csv
-"""
-
-blockip=[]
 
 training_dataset = ["./DDoS_data_0.csv", "./DDoS_data_1.csv"]
 
@@ -104,7 +93,7 @@ class myController(object):
         
 
 class gar_py:
-        def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', kern_type = 'linear', dbg = False, measurement_name = None, query = None):
+        def __init__(self, db_host = 'localhost', port = 8086, db = 'ddos_base', dbg = False, measurement_name = None, query = None):
                 self.debug = dbg
                 self.host = db_host
                 self.port = port
